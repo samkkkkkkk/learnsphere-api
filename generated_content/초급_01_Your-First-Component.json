@@ -1,0 +1,25 @@
+{
+  "title": "Your First Component",
+  "level": "초급",
+  "core_concepts": "React 컴포넌트는 UI의 기본 구성 요소입니다. 컴포넌트는 JavaScript 함수나 클래스로 작성되며, props를 받아서 React 엘리먼트를 반환합니다.",
+  "code_examples": [
+    {
+      "description": "기본 함수형 컴포넌트",
+      "code": "```jsx\nfunction Welcome(props) {\n  return <h1>Hello, {props.name}!</h1>;\n}\n```"
+    },
+    {
+      "description": "컴포넌트 사용하기",
+      "code": "```jsx\nconst element = <Welcome name=\"Sara\" />;\nReactDOM.render(element, document.getElementById('root'));\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "React 컴포넌트의 기본 역할은 무엇인가요?",
+      "answer": "UI의 재사용 가능한 독립적인 조각을 만드는 것입니다."
+    },
+    {
+      "question": "함수형 컴포넌트에서 props를 어떻게 받나요?",
+      "answer": "함수의 매개변수로 props를 받습니다."
+    }
+  ]
+} 

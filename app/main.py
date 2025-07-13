@@ -1,9 +1,11 @@
 # backend/app/main.py
 
 from fastapi import FastAPI, Depends, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from .core.database import engine, get_db
 from .models import models
@@ -24,6 +26,8 @@ app = FastAPI(title="React Learning Platform API")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +36,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- 정적 파일 서빙 설정 ---
+# 생성된 콘텐츠 파일들을 정적 파일로 제공
+generated_content_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'generated_content'))
+if os.path.exists(generated_content_path):
+    app.mount("/static/content", StaticFiles(directory=generated_content_path), name="content")
 
 # --- (수정) API 라우터 등록 ---
 # lesson_api와 admin_api만 등록합니다.
