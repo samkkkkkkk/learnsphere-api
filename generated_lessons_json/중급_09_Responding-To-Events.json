@@ -1,0 +1,29 @@
+{
+  "title": "Responding To Events",
+  "level": "중급",
+  "core_concepts": "React에서는 JSX에 *이벤트 핸들러*를 추가하여 클릭, 마우스 호버, 폼 인풋 포커스와 같은 사용자 상호작용에 반응할 수 있습니다. 이벤트 핸들러는 사용자가 상호작용할 때 발동하는 함수로, prop 형태로 요소에 전달됩니다. 이벤트 핸들러는 전달할 때 꼭 호출이 아닌 함수 참조로 전달해야 하며, 이로 인해 React가 이벤트 발생 시점을 잘 관리할 수 있습니다.",
+  "code_examples": [
+    {
+      "description": "버튼 클릭 시 알림 메시지를 표시하는 이벤트 핸들러 예시입니다.",
+      "code": "```javascript\nexport default function Button() {\n  function handleClick() {\n    alert('You clicked me!');\n  }\n\n  return (\n    <button onClick={handleClick}>\n      Click me\n    </button>\n  );\n}\n```"
+    },
+    {
+      "description": "부모 컴포넌트로부터 이벤트 핸들러를 prop으로 전달하여 버튼 클릭 시 특정 동작을 수행하는 예시입니다.",
+      "code": "```javascript\nfunction Button({ onClick, children }) {\n  return (\n    <button onClick={onClick}>\n      {children}\n    </button>\n  );\n}\n\nfunction Toolbar() {\n  return (\n    <div>\n      <Button onClick={() => alert('Playing!')}>Play Movie</Button>\n      <Button onClick={() => alert('Uploading!')}>Upload Image</Button>\n    </div>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "이벤트 핸들러는 어떻게 JSX에 추가할 수 있나요?",
+      "answer": "이벤트 핸들러는 JSX에서 `onClick={handleClick}`과 같이 prop 형태로 추가할 수 있으며, 이 때 함수는 호출이 아닌 함수 참조로 전달되어야 합니다."
+    },
+    {
+      "question": "이벤트 전파를 멈추는 방법은 무엇인가요?",
+      "answer": "이벤트 전파를 멈추기 위해서는 이벤트 핸들러 내에서 `e.stopPropagation()`을 호출하여 상위 컴포넌트 이벤트가 실행되지 않도록 할 수 있습니다."
+    },
+    {
+      "question": "이벤트 핸들러를 부모 컴포넌트로부터 어떻게 전달하나요?",
+      "answer": "부모 컴포넌트에서 자식 컴포넌트에 이벤트 핸들러를 prop으로 전달함으로써 가능합니다. 자식 컴포넌트는 이 prop을 버튼의 `onClick`과 같은 형태로 사용할 수 있습니다."
+    }
+  ]
+}

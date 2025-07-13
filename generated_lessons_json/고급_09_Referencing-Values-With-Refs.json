@@ -1,0 +1,29 @@
+{
+  "title": "Referencing Values With Refs",
+  "level": "고급",
+  "core_concepts": "Ref는 컴포넌트가 렌더링을 유발하지 않고도 값을 기억하고 사용할 수 있도록 도와주는 React의 기능입니다. Ref는 State와는 다르게, 값을 수정해도 컴포넌트가 다시 렌더링되지 않으며, `current` 프로퍼티를 사용해 값을 읽고 쓸 수 있습니다. Ref는 외부 시스템과의 상호작용이나 특정 DOM 요소에 접근하는 데 유용하게 사용됩니다.",
+  "code_examples": [
+    {
+      "description": "스톱워치 컴포넌트에서 Ref를 사용하여 interval ID를 저장하는 예시입니다. 이로 인해 interval ID가 component의 상태에 따라 다시 렌더링되거나 초기화되지 않도록 합니다.",
+      "code": "```javascript\nimport { useState, useRef } from 'react';\n\nexport default function Stopwatch() {\n  const [startTime, setStartTime] = useState(null);\n  const [now, setNow] = useState(null);\n  const intervalRef = useRef(null);\n\n  function handleStart() {\n    setStartTime(Date.now());\n    setNow(Date.now());\n\n    clearInterval(intervalRef.current);\n    intervalRef.current = setInterval(() => {\n      setNow(Date.now());\n    }, 10);\n  }\n\n  function handleStop() {\n    clearInterval(intervalRef.current);\n  }\n\n  let secondsPassed = 0;\n  if (startTime != null && now != null) {\n    secondsPassed = (now - startTime) / 1000;\n  }\n\n  return (\n    <> \n      <h1>Time passed: {secondsPassed.toFixed(3)}</h1>\n      <button onClick={handleStart}>Start</button>\n      <button onClick={handleStop}>Stop</button>\n    </>\n  );\n}\n```"
+    },
+    {
+      "description": "Ref를 사용하여 버튼 클릭 횟수를 추적하는 카운터 컴포넌트의 예시입니다. 이 예시는 Ref를 사용했기 때문에 다시 렌더링이 일어나지 않음을 보여줍니다.",
+      "code": "```javascript\nimport { useRef } from 'react';\n\nexport default function Counter() {\n  let ref = useRef(0);\n\n  function handleClick() {\n    ref.current = ref.current + 1;\n    alert('You clicked ' + ref.current + ' times!');\n  }\n\n  return (\n    <button onClick={handleClick}>Click me!</button>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "Ref와 State의 주요 차이점은 무엇입니까?",
+      "answer": "Ref는 값을 변경해도 다시 렌더링을 유발하지 않으며, State는 값을 설정할 때 컴포넌트가 다시 렌더링됩니다. 또한 Ref는 일반 자바스크립트 객체로 읽고 쓸 수 있는 반면, State는 리액트의 상태 관리 체계를 따릅니다."
+    },
+    {
+      "question": "Ref를 언제 사용하는 것이 좋습니까?",
+      "answer": "Ref는 렌더링 로직에 영향을 미치지 않으면서 외부 시스템이나 API와 상호작용할 필요가 있을 때 사용합니다. 예를 들어, Timeout ID를 저장할 때 유용합니다."
+    },
+    {
+      "question": "렌더링 중에 `ref.current`를 읽거나 쓰면 안 되는 이유는 무엇입니까?",
+      "answer": "`ref.current`의 값은 리액트가 추적하지 않기 때문에, 렌더링 중에 값을 읽거나 쓰면 예측할 수 없는 동작이 발생할 수 있습니다. 대신 필요한 경우 State를 사용해야 합니다."
+    }
+  ]
+}

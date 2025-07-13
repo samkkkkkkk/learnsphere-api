@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responding To Events</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Responding To Events 마스터하기 (중급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>React에서는 이벤트 핸들러가 사용자 상호작용에 따라 작동하는 중요한 역할을 합니다. 이벤트 핸들러는 주로 컴포넌트 내부에서 정의되며, 사용자 클릭, 마우스 호버, 폼 제출 등의 이벤트에 반응합니다. 이 핸들러는 props 형태로 JSX 태그에 추가되며, 이벤트 객체를 통해 상위 컴포넌트의 동작을 전파하거나 기본 동작을 방지하는 등의 작업을 수행할 수 있습니다.</p>
+<p>핵심 포인트: - 이벤트 핸들러는 컴포넌트 내부에서 정의되어 props를 통해 다른 컴포넌트에 전달될 수 있습니다. - 이벤트는 기본적으로 부모 컴포넌트로 전파되며, <code>stopPropagation()</code> 메서드를 호출하여 이를 중지할 수 있습니다. - 기본 동작을 방지하기 위해 <code>preventDefault()</code>를 사용합니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">// 버튼 클릭 시 배경색을 변경하는 컴포넌트
+<p>export default function LightSwitch() { function handleClick() { let bodyStyle = document.body.style; bodyStyle.backgroundColor = bodyStyle.backgroundColor === 'black' ? 'white' : 'black'; }</p>
+<p>return (</p>
+<button onClick={handleClick}>
+<p>Toggle the lights</p>
+</button>
+<p>); }</p>
+<p>// 색 변경 버튼 예시 function ColorSwitch({ onChangeColor }) { return (</p>
+<button onClick={e => {
+<p>e.stopPropagation(); onChangeColor(); }}> Change color</p>
+</button>
+<p>); }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: 이벤트 핸들러를 정의할 때, 어떤 방식으로 이벤트 함수를 전달해야 올바른가요?</p>
+<strong>정답</strong>: <code><button onClick={handleClick}></code> 형식으로 전달해야 합니다. <code>onClick={handleClick()}</code>와 같이 호출 형태로 전달하면 버튼 클릭 시점이 아닌 렌더링 시점에 함수가 즉시 실행됩니다.
+<p>2. <strong>문제</strong>: <code>e.stopPropagation()</code>의 용도는 무엇인가요?</p>
+<strong>정답</strong>: <code>e.stopPropagation()</code>은 이벤트가 부모 컴포넌트로 전파되는 것을 방지합니다. 이를 통해 특정 버튼 클릭 시 부모의 클릭 핸들러가 작동하지 않도록 할 수 있습니다.
+<p>3. <strong>문제</strong>: 기본 브라우저 동작을 방지하려면 어떤 메서드를 사용해야 하나요?</p>
+<strong>정답</strong>: 기본 브라우저 동작을 방지하기 위해 <code>e.preventDefault()</code> 메서드를 사용해야 합니다. 예를 들어, <code><form></code> 제출 시 페이지 리로드를 방지할 수 있습니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

@@ -1,0 +1,29 @@
+{
+  "title": "You Might Not Need An Effect",
+  "level": "고급",
+  "core_concepts": "Effect는 React의 외부 시스템과 동기화하는 데 사용되는 도구입니다. 그러나 props나 state가 변경될 때 컴포넌트의 state를 업데이트하려는 경우, Effect는 필요하지 않습니다. 불필요한 Effect를 제거하면 코드의 가독성과 성능이 향상됩니다. 렌더링 중에 계산할 수 있는 경우와 이벤트 핸들러에서 직접적으로 로직을 구현하는 것이 더 효율적입니다.",
+  "code_examples": [
+    {
+      "description": "사용자 이벤트에 따라 동작하는 예시입니다. Effect를 사용하지 않고 메시지를 전송하는 방법을 보여줍니다.",
+      "code": "```javascript\nimport { useState } from 'react';\n\nexport default function Form() {\n  const [showForm, setShowForm] = useState(true);\n  const [message, setMessage] = useState('');\n\n  function handleSubmit(e) {\n    e.preventDefault();\n    setShowForm(false);\n    sendMessage(message);\n  }\n\n  if (!showForm) {\n    return (\n      <>\n        <h1>Thanks for using our services!</h1>\n        <button onClick={() => {\n          setMessage('');\n          setShowForm(true);\n        }}>\n          Open chat\n        </button>\n      </>\n    );\n  }\n\n  return (\n    <form onSubmit={handleSubmit}>\n      <textarea\n        placeholder=\"Message\"\n        value={message}\n        onChange={e => setMessage(e.target.value)}\n      />\n      <button type=\"submit\" disabled={message === ''}>\n        Send\n      </button>\n    </form>\n  );\n}\n\nfunction sendMessage(message) {\n  console.log('Sending message: ' + message);\n}\n```"
+    },
+    {
+      "description": "props나 state에 따라 state를 업데이트하는 더 나은 방법을 보여주는 예시입니다.",
+      "code": "```javascript\nimport { useState, useEffect } from 'react';\n\nexport default function EditContact({ savedContact, onSave }) {\n  const [name, setName] = useState(savedContact.name);\n  const [email, setEmail] = useState(savedContact.email);\n\n  // Effect를 제거하고 key를 사용하여 상태를 초기화합니다.\n  return (\n    <section>\n      <label>\n        Name: {' '}\n        <input\n          type=\"text\"\n          value={name}\n          onChange={e => setName(e.target.value)}\n        />\n      </label>\n      <label>\n        Email: {' '}\n        <input\n          type=\"email\"\n          value={email}\n          onChange={e => setEmail(e.target.value)}\n        />\n      </label>\n      <button onClick={() => {\n        const updatedData = {\n          id: savedContact.id,\n          name: name,\n          email: email\n        };\n        onSave(updatedData);\n      }}>\n        Save\n      </button>\n      <button onClick={() => {\n        setName(savedContact.name);\n        setEmail(savedContact.email);\n      }}>\n        Reset\n      </button>\n    </section>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "Effect가 필요 없는 상황은 무엇인가요?",
+      "answer": "Effect는 데이터를 외부 시스템과 동기화할 때 필요하지만, 렌더링 중에 데이터를 계산할 수 있는 경우에는 필요하지 않습니다."
+    },
+    {
+      "question": "상태 초기화를 위한 권장 방법은 무엇인가요?",
+      "answer": "상태를 초기화할 때는 key prop을 사용하여 새로운 컴포넌트 인스턴스를 생성해 불필요한 상태 업데이트를 방지하는 것이 좋습니다."
+    },
+    {
+      "question": "이벤트 핸들러와 Effect의 차이점은 무엇인가요?",
+      "answer": "이벤트 핸들러는 사용자 행동에 반응하여 상태를 업데이트하는 반면, Effect는 컴포넌트가 렌더링된 후에 외부 시스템과 동기화하거나 사이드 이펙트를 처리하는 데 사용됩니다."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "title": "Thinking In React",
+  "level": "고급",
+  "core_concepts": "React를 사용하여 사용자 인터페이스를 구축할 때, 앱을 구성하는 요소인 컴포넌트를 나누고 각각의 상태를 정의하는 것이 중요합니다. 이 개념에서는 정적인 UI 버전을 먼저 만들고, 나중에 상태 관리를 통해 동적인 UI로 발전시키는 접근 방법을 배웁니다. Prop을 활용하여 부모에서 자식 컴포넌트로 데이터를 전달하는 단방향 데이터 흐름을 이해하는 것도 중요한 핵심 요소입니다.",
+  "code_examples": [
+    {
+      "description": "FilterableProductTable 컴포넌트의 기본 구조를 정의합니다.",
+      "code": "```javascript\nimport { useState } from 'react';\n\nfunction FilterableProductTable({ products }) {\n  const [filterText, setFilterText] = useState('');\n  const [inStockOnly, setInStockOnly] = useState(false);\n\n  return (\n    <div>\n      <SearchBar\n        filterText={filterText}\n        inStockOnly={inStockOnly}\n        onFilterTextChange={setFilterText}\n        onInStockOnlyChange={setInStockOnly} />\n      <ProductTable\n        products={products}\n        filterText={filterText}\n        inStockOnly={inStockOnly} />\n    </div>\n  );\n}\n```"
+    },
+    {
+      "description": "ProductTable 컴포넌트에서 필터링된 데이터를 렌더링하는 방법을 설명합니다.",
+      "code": "```javascript\nfunction ProductTable({ products, filterText, inStockOnly }) {\n  const rows = [];\n  let lastCategory = null;\n\n  products.forEach((product) => {\n    if (product.name.toLowerCase().indexOf(filterText.toLowerCase()) === -1) {\n      return;\n    }\n    if (inStockOnly && !product.stocked) {\n      return;\n    }\n    if (product.category !== lastCategory) {\n      rows.push(\n        <ProductCategoryRow\n          category={product.category}\n          key={product.category} />\n      );\n    }\n    rows.push(\n      <ProductRow\n        product={product}\n        key={product.name} />\n    );\n    lastCategory = product.category;\n  });\n\n  return (\n    <table>\n      <thead>\n        <tr>\n          <th>Name</th>\n          <th>Price</th>\n        </tr>\n      </thead>\n      <tbody>{rows}</tbody>\n    </table>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "Props와 State의 차이점은 무엇인가요?",
+      "answer": "Props는 부모가 자식 컴포넌트에 전달하는 데이터이며, 변하지 않는 특성을 가지고 있습니다. State는 컴포넌트의 내부에서 변경 가능한 데이터로, 구성 요소의 동작에 영향을 미칩니다."
+    },
+    {
+      "question": "정적 UI를 먼저 작성하는 이유는 무엇인가요?",
+      "answer": "정적 UI는 상호작용 없이 단순히 데이터를 렌더링하는 구조로, 애플리케이션의 기본 레이아웃을 확립하는데 도움을 줍니다. 이를 통해 이후에 동적인 요소를 추가하는 것이 더 쉬워집니다."
+    },
+    {
+      "question": "단방향 데이터 흐름이란 무엇인가요?",
+      "answer": "단방향 데이터 흐름은 부모 컴포넌트에서 자식 컴포넌트로 데이터가 한 방향으로만 흐르는 구조입니다. 이는 예측 가능성과 유지 보수성을 높여줍니다."
+    }
+  ]
+}

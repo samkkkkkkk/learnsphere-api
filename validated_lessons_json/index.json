@@ -1,0 +1,213 @@
+{
+  "고급": [
+    {
+      "title": "TypeScript",
+      "filename": "고급_01_Typescript.json",
+      "number": 1
+    },
+    {
+      "title": "효과와 동기화",
+      "filename": "고급_02_Synchronizing-With-Effects.json",
+      "number": 2
+    },
+    {
+      "title": "Escape Hatches",
+      "filename": "고급_03_Escape-Hatches.json",
+      "number": 3
+    },
+    {
+      "title": "Effect 의존성 관리",
+      "filename": "고급_04_Removing-Effect-Dependencies.json",
+      "number": 4
+    },
+    {
+      "title": "React로 생각하기",
+      "filename": "고급_05_Thinking-In-React.json",
+      "number": 5
+    },
+    {
+      "title": "DOM 조작하기: Refs 사용하기",
+      "filename": "고급_06_Manipulating-The-Dom-With-Refs.json",
+      "number": 6
+    },
+    {
+      "title": "Reactive Effects의 생명주기",
+      "filename": "고급_07_Lifecycle-Of-Reactive-Effects.json",
+      "number": 7
+    },
+    {
+      "title": "로직 재사용을 위한 커스텀 Hook",
+      "filename": "고급_08_Reusing-Logic-With-Custom-Hooks.json",
+      "number": 8
+    },
+    {
+      "title": "값 참조하기: Refs",
+      "filename": "고급_09_Referencing-Values-With-Refs.json",
+      "number": 9
+    },
+    {
+      "title": "Effect의 필요성",
+      "filename": "고급_10_You-Might-Not-Need-An-Effect.json",
+      "number": 10
+    },
+    {
+      "title": "React 컴파일러",
+      "filename": "고급_11_React-Compiler.json",
+      "number": 11
+    },
+    {
+      "title": "이벤트와 효과 분리하기",
+      "filename": "고급_12_Separating-Events-From-Effects.json",
+      "number": 12
+    }
+  ],
+  "중급": [
+    {
+      "title": "입력에 반응하는 상태 관리",
+      "filename": "중급_01_Reacting-To-Input-With-State.json",
+      "number": 1
+    },
+    {
+      "title": "상태 업데이트 시 객체 불변성 유지하기",
+      "filename": "중급_02_Updating-Objects-In-State.json",
+      "number": 2
+    },
+    {
+      "title": "State 구조 선택하기",
+      "filename": "중급_03_Choosing-The-State-Structure.json",
+      "number": 3
+    },
+    {
+      "title": "컴포넌트 간 상태 공유하기",
+      "filename": "중급_04_Sharing-State-Between-Components.json",
+      "number": 4
+    },
+    {
+      "title": "상태를 스냅샷으로 이해하기",
+      "filename": "중급_05_State-As-A-Snapshot.json",
+      "number": 5
+    },
+    {
+      "title": "Context를 활용한 데이터 전달",
+      "filename": "중급_06_Passing-Data-Deeply-With-Context.json",
+      "number": 6
+    },
+    {
+      "title": "상태 로직을 리듀서로 추출하기",
+      "filename": "중급_07_Extracting-State-Logic-Into-A-Reducer.json",
+      "number": 7
+    },
+    {
+      "title": "상태 보존 및 초기화",
+      "filename": "중급_08_Preserving-And-Resetting-State.json",
+      "number": 8
+    },
+    {
+      "title": "이벤트에 반응하기",
+      "filename": "중급_09_Responding-To-Events.json",
+      "number": 9
+    },
+    {
+      "title": "상태에서 배열 업데이트하기",
+      "filename": "중급_10_Updating-Arrays-In-State.json",
+      "number": 10
+    },
+    {
+      "title": "상태 업데이트 큐잉 이해하기",
+      "filename": "중급_11_Queueing-A-Series-Of-State-Updates.json",
+      "number": 11
+    },
+    {
+      "title": "렌더링과 커밋",
+      "filename": "중급_12_Render-And-Commit.json",
+      "number": 12
+    },
+    {
+      "title": "Reducer와 Context로 확장하기",
+      "filename": "중급_13_Scaling-Up-With-Reducer-And-Context.json",
+      "number": 13
+    },
+    {
+      "title": "컴포넌트의 상태 관리",
+      "filename": "중급_14_State-A-Components-Memory.json",
+      "number": 14
+    }
+  ],
+  "초급": [
+    {
+      "title": "첫 번째 컴포넌트",
+      "filename": "초급_01_Your-First-Component.json",
+      "number": 1
+    },
+    {
+      "title": "컴포넌트에 props 전달하기",
+      "filename": "초급_02_Passing-Props-To-A-Component.json",
+      "number": 2
+    },
+    {
+      "title": "React Developer Tools",
+      "filename": "초급_03_React-Developer-Tools.json",
+      "number": 3
+    },
+    {
+      "title": "조건부 렌더링",
+      "filename": "초급_04_Conditional-Rendering.json",
+      "number": 4
+    },
+    {
+      "title": "컴포넌트의 순수성 유지하기",
+      "filename": "초급_05_Keeping-Components-Pure.json",
+      "number": 5
+    },
+    {
+      "title": "기존 프로젝트에 React 추가하기",
+      "filename": "초급_06_Add-React-To-An-Existing-Project.json",
+      "number": 6
+    },
+    {
+      "title": "UI를 트리로 이해하기",
+      "filename": "초급_07_Understanding-Your-Ui-As-A-Tree.json",
+      "number": 7
+    },
+    {
+      "title": "컴포넌트의 가져오기 및 내보내기",
+      "filename": "초급_08_Importing-And-Exporting-Components.json",
+      "number": 8
+    },
+    {
+      "title": "리스트 렌더링",
+      "filename": "초급_09_Rendering-Lists.json",
+      "number": 9
+    },
+    {
+      "title": "React 설치",
+      "filename": "초급_10_Installation.json",
+      "number": 10
+    },
+    {
+      "title": "개발 환경 설정",
+      "filename": "초급_11_Editor-Setup.json",
+      "number": 11
+    },
+    {
+      "title": "틱택토 튜토리얼",
+      "filename": "초급_12_Tutorial-Tic-Tac-Toe.json",
+      "number": 12
+    },
+    {
+      "title": "새로운 React 프로젝트 시작하기",
+      "filename": "초급_13_Start-A-New-React-Project.json",
+      "number": 13
+    },
+    {
+      "title": "JSX에서 중괄호 활용하기",
+      "filename": "초급_14_Javascript-In-Jsx-With-Curly-Braces.json",
+      "number": 14
+    },
+    {
+      "title": "JSX로 마크업 작성하기",
+      "filename": "초급_15_Writing-Markup-With-Jsx.json",
+      "number": 15
+    }
+  ]
+}

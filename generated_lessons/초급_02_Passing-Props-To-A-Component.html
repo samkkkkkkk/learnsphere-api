@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passing Props To A Component</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Passing Props To A Component 마스터하기 (초급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>React 컴포넌트는 props를 통해 서로 통신하며, 부모 컴포넌트가 자식 컴포넌트에 정보를 전달하는 방식입니다. props는 JSX 어트리뷰트를 통해 전달되며, 객체, 배열, 함수 등 모든 JavaScript 값을 포함할 수 있습니다. 부모 컴포넌트는 필요에 따라 변경 가능한 state를 사용하여 props를 업데이트할 수 있으며, 자식 컴포넌트는 이러한 props를 구조 분해 할당을 통해 사용할 수 있습니다. 주의할 점은 props는 불변성이 있기 때문에 직접적으로 수정할 수 없다는 것입니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">// Clock.js
+<p>export default function Clock({ color, time }) { return (</p>
+<h1 style={{ color: color }}>
+<p>{time}</p>
+</h1>
+<p>); }</code></pre></p>
+<pre><code class="language-javascript">// App.js
+<p>import { useState, useEffect } from 'react'; import Clock from './Clock.js';</p>
+<p>function useTime() { const [time, setTime] = useState(() => new Date()); useEffect(() => { const id = setInterval(() => { setTime(new Date()); }, 1000); return () => clearInterval(id); }, []); return time; }</p>
+<p>export default function App() { const time = useTime(); const [color, setColor] = useState('lightcoral'); return (</p>
+<div>
+<p>
+<p>Pick a color:{' '}</p>
+<select value={color} onChange={e => setColor(e.target.value)}>
+<option value="lightcoral">lightcoral</option>
+<option value="midnightblue">midnightblue</option>
+<option value="rebeccapurple">rebeccapurple</option>
+</select>
+</p>
+<Clock color={color} time={time.toLocaleTimeString()} />
+</div>
+<p>); }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: 컴포넌트에 props를 전달하는 방법은 무엇인가요?</p>
+<strong>정답</strong>: JSX 어트리뷰트를 통해 전달한다. 예를 들어, <code><Clock color="red" time="12:00" /></code>와 같이 사용할 수 있다.
+<p>2. <strong>문제</strong>: props의 기본값을 지정하는 방법은 무엇인가요?</p>
+<strong>정답</strong>: 구조 분해 할당 시 변수 뒤에 <code>=</code>을 이용해 기본값을 할당한다. 예를 들어, <code>size = 100</code>과 같은 방식이다.
+<p>3. <strong>문제</strong>: props는 왜 변경할 수 없는가?</p>
+<strong>정답</strong>: props는 불변성을 가지기 때문에, 직접적으로 수정할 수 없다. 변경이 필요할 경우, 부모 컴포넌트를 통해 새로운 props를 전달해야 한다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

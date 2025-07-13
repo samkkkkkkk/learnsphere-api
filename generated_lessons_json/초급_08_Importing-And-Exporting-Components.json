@@ -1,0 +1,29 @@
+{
+  "title": "Importing And Exporting Components",
+  "level": "초급",
+  "core_concepts": "React에서 컴포넌트를 서로 다른 파일에서 import 하고 export하는 방법을 이해하는 것은 코드의 재사용성과 관리성을 높이는 데 매우 중요합니다. 하나의 파일에서 여러 컴포넌트를 export 할 수 있으며, 이를 사용하려면 적절한 import 문법을 알아야 합니다. 기본(export default) 방식과 이름이 있는(export named) 방식 두 가지 방식이 있습니다.",
+  "code_examples": [
+    {
+      "description": "기본적으로 컴포넌트를 export 하는 방법",
+      "code": "```javascript\n// Profile.js\nexport default function Profile() {\n  return (\n    <img\n      src=\"https://i.imgur.com/MK3eW3As.jpg\"\n      alt=\"Katherine Johnson\"\n    />\n  );\n}\n```"
+    },
+    {
+      "description": "여러 컴포넌트를 export 하는 방법과 import 하는 예시",
+      "code": "```javascript\n// Gallery.js\nexport function Profile() {\n  return (\n    <img\n      src=\"https://i.imgur.com/QIrZWGIs.jpg\"\n      alt=\"Alan L. Hart\"\n    />\n  );\n}\n\nexport default function Gallery() {\n  return (\n    <section>\n      <h1>Amazing scientists</h1>\n      <Profile />\n      <Profile />\n      <Profile />\n    </section>\n  );\n}\n\n// App.js\nimport Gallery from './Gallery.js';\nimport { Profile } from './Gallery.js';\n\nexport default function App() {\n  return (\n    <div>\n      <Profile />\n      <Gallery />\n    </div>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "하나의 파일에서 default export를 여러 번 사용할 수 있나요?",
+      "answer": "아니요, 하나의 파일에서 default export는 단 하나만 존재할 수 있습니다."
+    },
+    {
+      "question": "named export를 사용해서 Profile 컴포넌트를 export하는 문법은 무엇인가요?",
+      "answer": "```javascript\nexport function Profile() {\n  // 컴포넌트 내용\n}\n```"
+    },
+    {
+      "question": "App.js 파일에서 Gallery 컴포넌트를 import할 때 사용하는 문법은 무엇인가요?",
+      "answer": "```javascript\nimport Gallery from './Gallery.js';\n```"
+    }
+  ]
+}

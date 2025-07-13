@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rendering Lists</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Rendering Lists 마스터하기 (초급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>리스트를 렌더링하는 것은 React에서 데이터를 표시하는 중요한 방법입니다. 배열의 각 항목을 컴포넌트로 변환하여 웹 페이지에서 사용자에게 다양한 정보나 아이템을 효과적으로 보여줄 수 있습니다. 복잡한 데이터 구조를 다룰 때, <code>map()</code>과 <code>filter()</code>와 같은 배열 메서드를 사용하여 원하는 데이터만 선택하고 이를 렌더링하는 것이 가능합니다.</p>
+<p>리스트 항목의 각 요소는 React가 항목을 구분하고 효과적으로 업데이트할 수 있도록 <code>key</code>라는 고유한 속성을 줘야 합니다. <code>key</code>는 렌더링할 때 각 요소가 어떻게 식별되는지를 명확히 하여 DOM 업데이트를 최적화합니다. 따라서 배열의 모든 항목이 <code>key</code>를 가지도록 하는 것이 중요합니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">// data.js
+<p>export const people = [{ id: 0, name: 'Creola Katherine Johnson', profession: 'mathematician', accomplishment: 'spaceflight calculations', }, { id: 1, name: 'Mario José Molina-Pasquel Henríquez', profession: 'chemist', accomplishment: 'discovery of Arctic ozone hole', }, { id: 2, name: 'Mohammad Abdus Salam', profession: 'physicist', accomplishment: 'electromagnetism theory', }, { id: 3, name: 'Percy Lavon Julian', profession: 'chemist', accomplishment: 'pioneering cortisone drugs, steroids and birth control pills', }, { id: 4, name: 'Subrahmanyan Chandrasekhar', profession: 'astrophysicist', accomplishment: 'white dwarf star mass calculations', }];</p>
+<p>// App.js import { people } from './data.js'; import { getImageUrl } from './utils.js';</p>
+<p>export default function List() { const listItems = people.map(person =></p>
+<li key={person.id}>
+<img src={getImageUrl(person)} alt={person.name} />
+<p>
+<b>{person.name}:</b> {person.profession} known for {person.accomplishment}
+</p>
+</li>
+<p>); return <ul>{listItems}</ul>; }</p>
+<p>// utils.js export function getImageUrl(person) { return 'https://i.imgur.com/' + person.imageId + 's.jpg'; }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: React에서 리스트를 렌더링할 때 <code>key</code>가 필요한 이유는 무엇인가요?</p>
+<strong>정답</strong>: <code>key</code>는 React가 각 항목을 구분하고 업데이트를 최적화하도록 돕기 위해 필요합니다. 효과적으로 변화하는 DOM을 관리하기 위해 각 항목이 고유하게 식별될 수 있어야 합니다.
+<p>2. <strong>문제</strong>: <code>map()</code> 메서드는 어떤 역할을 하나요?</p>
+<strong>정답</strong>: <code>map()</code> 메서드는 배열의 각 항목을 반복하여 새로운 배열을 생성하는 데 사용됩니다. 이를 통해 배열의 데이터를 React 컴포넌트로 변환하여 렌더링할 수 있습니다.
+<p>3. <strong>문제</strong>: <code>filter()</code> 메서드를 사용하는 주된 목적은 무엇인가요?</p>
+<strong>정답</strong>: <code>filter()</code> 메서드는 조건을 기반으로 배열의 항목을 선택하여 새로운 배열을 생성하는 것입니다. 특정 조건을 만족하는 항목만 남기고 나머지는 제외하여 원하는 데이터만 렌더링할 수 있습니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

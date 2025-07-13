@@ -1,0 +1,29 @@
+{
+  "title": "Escape Hatches",
+  "level": "고급",
+  "core_concepts": "Escape Hatches는 React에서 외부 시스템과 상호작용하고 동기화하는 방법을 설명합니다. Ref를 사용하여 값을 추적하고, Effect를 활용하여 외부 API와 상호작용하여 컴포넌트를 제어하는 방법을 학습합니다. 또한, 불필요한 Effect를 제거하고 클린업 함수를 활용하는 방법도 포함됩니다.",
+  "code_examples": [
+    {
+      "description": "Ref를 사용하여 컴포넌트의 클릭 수를 추적하는 코드",
+      "code": "```javascript\nimport { useRef } from 'react';\n\nexport default function Counter() {\n  const ref = useRef(0);\n\n  function handleClick() {\n    ref.current += 1;\n    alert('You clicked ' + ref.current + ' times!');\n  }\n\n  return (\n    <button onClick={handleClick}>\n      Click me!\n    </button>\n  );\n}\n```"
+    },
+    {
+      "description": "Effect를 통해 서버와의 연결을 설정하고 연결을 클린업하는 코드",
+      "code": "```javascript\nimport { useState, useEffect } from 'react';\nimport { createConnection } from './chat.js';\n\nconst serverUrl = 'https://localhost:1234';\n\nfunction ChatRoom({ roomId }) {\n  useEffect(() => {\n    const connection = createConnection(serverUrl, roomId);\n    connection.connect();\n    return () => connection.disconnect();\n  }, [roomId]);\n\n  return <h1>Welcome to the {roomId} room!</h1>;\n}\n\nexport default function App() {\n  const [roomId, setRoomId] = useState('general');\n  return (\n    <>\n      <label>\n        Choose the chat room:{' '}\n        <select\n          value={roomId}\n          onChange={e => setRoomId(e.target.value)}\n        >\n          <option value=\"general\">general</option>\n          <option value=\"travel\">travel</option>\n          <option value=\"music\">music</option>\n        </select>\n      </label>\n      <hr />\n      <ChatRoom roomId={roomId} />\n    </>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "Ref를 사용하는 이유는 무엇인가요?",
+      "answer": "Ref를 사용하면 React의 상태값을 변경하더라도 컴포넌트를 다시 렌더링하지 않고 값을 기억하고 추적할 수 있습니다."
+    },
+    {
+      "question": "Effect의 의존성 배열에서 불필요한 의존성을 제거하는 방법은?",
+      "answer": "Effect 내에서 사용되는 값들이 아닌, 실제로 변경해야 하는 값만 의존성 배열에 포함시켜야 합니다. 예를 들어, 사용자 입력을 받아 처리하는 내에서 생성된 객체는 의존성 목록에서 제외해야 합니다."
+    },
+    {
+      "question": "Effect의 클린업 함수의 역할은 무엇인가요?",
+      "answer": "클린업 함수는 Effect가 재실행되기 전에 이전의 리소스를 해제하거나 정리하는 역할을 합니다. 이는 주로 외부 API와의 연결을 끊거나 이벤트 리스너를 제거하는 데 사용됩니다."
+    }
+  ]
+}

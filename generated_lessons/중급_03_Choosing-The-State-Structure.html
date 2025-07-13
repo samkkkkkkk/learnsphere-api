@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choosing The State Structure</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Choosing The State Structure 마스터하기 (중급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>상태를 효율적으로 구조화하는 것은 React 컴포넌트를 설계할 때 매우 중요합니다. 잘 구조화된 상태는 코드의 복잡성을 줄이고, 버그를 방지하며, 디버깅을 용이하게 합니다. 아래는 상태 구조화에서 고려해야 할 몇 가지 핵심 원칙입니다:</p>
+<p>1. <strong>연관된 상태 그룹화하기</strong>: 두 개 이상의 상태 변수가 항상 동시에 업데이트될 때는 이들을 단일 상태 변수로 통합하는 것이 좋습니다. 이는 동기화를 유지하는 데 유리합니다. 2. <strong>상태의 모순 피하기</strong>: 여러 상태 조각이 서로 불일치하는 방식으로 구성되면 혼란이 생길 수 있으니, 한 상태로 통합하거나 관련된 상태를 그룹화하는 것이 중요합니다. 3. <strong>불필요한 상태 피하기</strong>: 렌더링 중 컴포넌트의 props나 기존 상태에서 값을 계산할 수 있다면, 그 값을 별도로 상태로 유지할 필요가 없습니다. 4. <strong>상태의 중복 피하기</strong>: 동일한 데이터 조각이 여러 상태 변수에 중복될 경우, 동기화를 관리하기 어려워지므로 중복을 피해야 합니다. 5. <strong>깊게 중첩된 상태 피하기</strong>: 깊게 중첩된 상태는 업데이트하기 어렵고, 코드의 가독성을 떨어뜨리므로 평탄한 구조로 만드는 것이 좋습니다.</p>
+<p>이러한 원칙들을 지킴으로써 오류 없이 상태를 쉽게 업데이트하고, 컴포넌트를 효율적으로 관리할 수 있습니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">import { useState } from 'react';
+<p>// 상태 구조의 예시: 단일 상태 변수로 그룹화하기 const MovingDot = () => { const [position, setPosition] = useState({ x: 0, y: 0 });</p>
+<p>return (</p>
+<div
+<p>onPointerMove={e => { setPosition({ x: e.clientX, y: e.clientY }); }} style={{ position: 'relative', width: '100vw', height: '100vh', }}></p>
+<div style={{
+<p>position: 'absolute', backgroundColor: 'red', borderRadius: '50%', transform: <code>translate(${position.x}px, ${position.y}px)</code>, left: -10, top: -10, width: 20, height: 20, }} /></p>
+</div>
+<p>); };</p>
+<p>// 상태 중복 피하기: 선택 ID를 상태로 보관 const Menu = () => { const initialItems = [ { title: 'pretzels', id: 0 }, { title: 'crispy seaweed', id: 1 }, { title: 'granola bar', id: 2 }, ];</p>
+<p>const [items, setItems] = useState(initialItems); const [selectedId, setSelectedId] = useState(0); const selectedItem = items.find(item => item.id === selectedId);</p>
+<p>const handleItemChange = (id, e) => { setItems(items.map(item => item.id === id ? { ...item, title: e.target.value } : item )); };</p>
+<p>return (</p>
+<div>
+<h2>What's your travel snack?</h2>
+<ul>
+<p>{items.map(item => (</p>
+<li key={item.id}>
+<input
+<p>value={item.title} onChange={e => handleItemChange(item.id, e)} /></p>
+<button onClick={() => setSelectedId(item.id)}>
+<p>Choose</p>
+</button>
+</li>
+<p>))}</p>
+</ul>
+<p>You picked {selectedItem.title}.</p>
+</div>
+<p>); };</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: 두 개의 상태 변수가 항상 동시에 변경될 때, 이를 어떻게 구조화하는 것이 좋을까요?</p>
+<strong>정답</strong>: 두 개의 상태 변수를 단일 상태 변수로 통합하여 그룹화하는 것이 좋습니다. 이는 동기화를 유지하고 관리하기 용이하게 합니다.
+<p>2. <strong>문제</strong>: 상태에서 중복된 정보를 피해야 하는 이유는 무엇인가요?</p>
+<strong>정답</strong>: 상태에서 중복 정보를 피해야 하는 이유는 동기화 관리가 어려워지고, 버그 발생 가능성이 커지기 때문입니다. 중복을 줄이면 변경 사항을 쉽게 추적할 수 있습니다.
+<p>3. <strong>문제</strong>: 깊게 중첩된 상태를 구성할 경우의 문제점은 무엇인가요?</p>
+<strong>정답</strong>: 깊게 중첩된 상태는 업데이트하기 어렵고, 가독성을 떨어뜨리며, 복잡한 구조를 초래하여 디버깅이 힘들어지기 때문에 평탄한 구조로 만드는 것이 좋습니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

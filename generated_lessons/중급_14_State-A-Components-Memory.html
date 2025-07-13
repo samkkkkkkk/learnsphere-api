@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State A Components Memory</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 State A Components Memory 마스터하기 (중급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>React에서 <strong>state</strong>는 컴포넌트가 화면에 표시해야 하는 정보를 "기억"하는 방법입니다. 각 컴포넌트는 자신의 고유한 state를 가지며, 해당 state는 컴포넌트가 렌더링될 때마다 React에 의해 관리됩니다. State 변수를 사용하는 주요 이유는 사용자의 입력이나 다른 상호작용으로 인해 컴포넌트의 상태를 변경하고, 변경된 상태에 따라 UI를 업데이트하기 위함입니다.</p>
+<p>State는 <strong>지역적</strong>이고 <strong>비공개</strong>입니다. 즉, 같은 컴포넌트를 여러 번 렌더링하더라도 각각은 독립적인 state를 가집니다. 이렇게 함으로써, 부모 컴포넌트는 자식 컴포넌트의 내부 상태를 알 수 없으며, 이는 컴포넌트의 재사용성과 독립성을 높입니다. 여러 개의 state 변수를가질 수 있으며, 이들을 <code>useState</code> 훅을 통해 선언하고 관리합니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">import { useState } from 'react';
+<p>import { sculptureList } from './data.js';</p>
+<p>export default function Gallery() { const [index, setIndex] = useState(0);      // 현재 조각상 인덱스 state const [showMore, setShowMore] = useState(false); // 더 많은 정보 표시 여부 state</p>
+<p>function handleNextClick() { setIndex(index + 1); // 인덱스를 증가시킴 }</p>
+<p>function handleMoreClick() { setShowMore(!showMore); // 더 많은 정보 보기 토글 }</p>
+<p>let sculpture = sculptureList[index]; return (</p>
+<>
+<button onClick={handleNextClick}>
+<p>Next</p>
+</button>
+<h2>
+<i>{sculpture.name} </i>
+<p>by {sculpture.artist}</p>
+</h2>
+<h3>
+<p>({index + 1} of {sculptureList.length})</p>
+</h3>
+<button onClick={handleMoreClick}>
+<p>{showMore ? 'Hide' : 'Show'} details</p>
+</button>
+<p>{showMore && <p>{sculpture.description}</p>}</p>
+<img
+<p>src={sculpture.url} alt={sculpture.alt} /></p>
+</>
+<p>); }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: 컴포넌트 내부에서 state 변수를 추가할 때 사용해야 하는 훅은 무엇인가요?</p>
+<strong>정답</strong>: <code>useState</code> 훅입니다. 이 훅은 컴포넌트의 state를 선언하고, 현재 값과 해당 값을 업데이트할 수 있는 함수를 반환합니다.
+<p>2. <strong>문제</strong>: 같은 컴포넌트를 두 번 렌더링할 경우, 각 인스턴스의 state가 어떻게 되는가요?</p>
+<strong>정답</strong>: 각 인스턴스는 독립적인 state를 가지게 됩니다. 즉, 하나의 인스턴스에서 상태를 변경해도 다른 인스턴스에는 영향을 미치지 않습니다.
+<p>3. <strong>문제</strong>: 두 개의 state 변수를 가진 컴포넌트가 있을 때, React에서 컴포넌트가 다시 렌더링될 때 상태가 어떻게 기억되는가요?</p>
+<strong>정답</strong>: React는 각 state 변수의 값을 기억하고, <code>useState</code> 호출의 순서에 따라 다음 상태 쌍을 반환합니다. 이렇게 함으로써 상태를 효율적으로 관리할 수 있습니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

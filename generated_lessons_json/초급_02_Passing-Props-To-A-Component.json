@@ -1,0 +1,29 @@
+{
+  "title": "컴포넌트에 props 전달하기",
+  "level": "초급",
+  "core_concepts": "React 컴포넌트는 props를 사용하여 부모 컴포넌트에서 자식 컴포넌트로 데이터를 전달합니다. props는 객체, 배열 및 함수를 포함한 모든 JavaScript 값을 전달할 수 있으며, 컴포넌트 내부에서 구조 분해 할당을 통해 쉽게 읽을 수 있습니다. 이로 인해 컴포넌트의 재사용성과 관리 용이성이 향상됩니다.",
+  "code_examples": [
+    {
+      "description": "시계 컴포넌트 예시입니다. 이 컴포넌트는 부모 컴포넌트로부터 색상과 시간을 props로 전달받습니다.",
+      "code": "```javascript\nexport default function Clock({ color, time }) {\n  return (\n    <h1 style={{ color: color }}>\n      {time}\n    </h1>\n  );\n}\n```"
+    },
+    {
+      "description": "앱 컴포넌트 예시입니다. 이 컴포넌트는 상태를 가지고 있으며, select box를 통해 색상을 변경하고 현재 시간을 Clock 컴포넌트에 전달합니다.",
+      "code": "```javascript\nimport { useState, useEffect } from 'react';\nimport Clock from './Clock.js';\n\nfunction useTime() {\n  const [time, setTime] = useState(() => new Date());\n  useEffect(() => {\n    const id = setInterval(() => {\n      setTime(new Date());\n    }, 1000);\n    return () => clearInterval(id);\n  }, []);\n  return time;\n}\n\nexport default function App() {\n  const time = useTime();\n  const [color, setColor] = useState('lightcoral');\n  return (\n    <div>\n      <p>\n        Pick a color:{' '}\n        <select value={color} onChange={e => setColor(e.target.value)}>\n          <option value=\"lightcoral\">lightcoral</option>\n          <option value=\"midnightblue\">midnightblue</option>\n          <option value=\"rebeccapurple\">rebeccapurple</option>\n        </select>\n      </p>\n      <Clock color={color} time={time.toLocaleTimeString()} />\n    </div>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "props란 무엇인가요?",
+      "answer": "props는 부모 컴포넌트에서 자식 컴포넌트로 데이터를 전달하는 방법입니다. 이는 일반적으로 HTML 속성과 유사하게 작동하며, 컴포넌트의 내부 동작에 필요한 다양한 값을 포함할 수 있습니다."
+    },
+    {
+      "question": "컴포넌트에서 props를 읽으려면 어떻게 해야 하나요?",
+      "answer": "컴포넌트의 함수 정의에서 매개변수에 구조 분해 할당을 사용하여 각 props를 변수로 사용할 수 있습니다. 예를 들어, `function Avatar({ person, size })`와 같이 정의하면 `Avatar` 컴포넌트 내에서 `person`과 `size`를 직접 사용할 수 있습니다."
+    },
+    {
+      "question": "props의 기본값을 설정하려면 어떻게 해야 하나요?",
+      "answer": "기본값을 설정하려면 구조 분해 할당에서 변수 뒤에 `=` 기호를 사용하여 기본값을 지정할 수 있습니다. 예를 들어, `function Avatar({ person, size = 100 })`와 같이 설정하면, `size` prop이 없을 때 기본값으로 `100`이 사용됩니다."
+    }
+  ]
+}

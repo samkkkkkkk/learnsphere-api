@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preserving And Resetting State</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Preserving And Resetting State 마스터하기 (중급)</h2>
+<h3>📘 Core Concepts</h3>
+<p>React에서 각 컴포넌트는 독립적인 state를 가지고 있으며, 이 state는 컴포넌트가 UI 트리에서 어떤 위치에 렌더링되는지에 따라 관리됩니다. 컴포넌트가 같은 위치에 렌더링될 때 React는 state를 보존하지만, 위치가 변하면 state가 초기화됩니다. 따라서 컴포넌트의 위치가 유지되면 state가 공유되고, 다른 위치에 경로를 지정하면 새로 생성됩니다.</p>
+<p>특정 작업에서 state를 초기화하고자 할 때는 두 가지 방법이 있습니다. 첫 번째 방법은 컴포넌트를 다른 위치에서 렌더링하는 것이고, 두 번째 방법은 각 컴포넌트에 독특한 <code>key</code> 값을 제공하여 React에게 각각의 상태를 알려주는 것입니다. 이러한 원리를 바탕으로 state를 제어함으로써 사용자는 더 나은 경험을 할 수 있습니다.</p>
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">import { useState } from 'react';
+<p>export default function App() { const [isPlayerA, setIsPlayerA] = useState(true);</p>
+<p>return (</p>
+<div>
+<p>{isPlayerA ? (</p>
+<Counter person="Taylor" key="Taylor" />
+<p>) : (</p>
+<Counter person="Sarah" key="Sarah" />
+<p>)}</p>
+<button onClick={() => setIsPlayerA(!isPlayerA)}>
+<p>Next player!</p>
+</button>
+</div>
+<p>); }</p>
+<p>function Counter({ person }) { const [score, setScore] = useState(0);</p>
+<p>return (</p>
+<div>
+<h1>{person}'s score: {score}</h1>
+<button onClick={() => setScore(score + 1)}>Add one</button>
+</div>
+<p>); }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: 컴포넌트의 위치가 변경될 때 React는 어떻게 반응하나요?</p>
+<strong>정답</strong>: 위치가 변경되면 React는 해당 컴포넌트를 삭제하고 새로 추가된 컴포넌트를 렌더링합니다. 이때 기존의 state는 초기화됩니다.
+<p>2. <strong>문제</strong>: 두 개의 서로 다른 컴포넌트를 같은 자리에 렌더링할 때 state는 어떻게 관리되나요?</p>
+<strong>정답</strong>: 서로 다른 컴포넌트를 같은 자리에 렌더링하면 React는 새로 렌더링된 컴포넌트에 대해 state를 초기화합니다. 컴포넌트가 위치가 유지되어야 state가 이전 상태를 보존할 수 있습니다.
+<p>3. <strong>문제</strong>: state를 초기화하기 위한 두 가지 방법은 무엇인가요?</p>
+<strong>정답</strong>: 첫 번째 방법은 컴포넌트를 다른 위치에 렌더링하는 것이고, 두 번째 방법은 각각의 컴포넌트에 유일한 key 값을 제공하여 React가 각 상태를 구별할 수 있도록 하는 것입니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

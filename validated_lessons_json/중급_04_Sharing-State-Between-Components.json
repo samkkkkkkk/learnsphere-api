@@ -1,0 +1,29 @@
+{
+  "title": "컴포넌트 간 상태 공유하기",
+  "level": "중급",
+  "core_concepts": "React에서 상태가 서로 다른 컴포넌트 간에 공유되어야 할 때, 가장 가까운 공통 부모 컴포넌트로 상태를 끌어올리고, 이를 props로 자식 컴포넌트에 전달하여 상태를 제어하는 방법을 배웁니다. 이 방식은 '상태 끌어올리기'라고 하며, 여러 컴포넌트가 동일한 상태를 참조하고, 상태 변경 시 모든 컴포넌트가 동기화되는 것을 도와줍니다.",
+  "code_examples": [
+    {
+      "description": "사용자 입력을 동기화하는 두 개의 인풋 컴포넌트 예시입니다. 부모 컴포넌트에서 상태를 관리하여 두 인풋이 동일한 값을 공유하도록 구현합니다.",
+      "code": "```javascript\nimport { useState } from 'react';\n\nexport default function SyncedInputs() {\n  const [text, setText] = useState('');\n\n  function handleChange(e) {\n    setText(e.target.value);\n  }\n\n  return (\n    <> \n      <Input \n        label=\"첫 번째 입력\" \n        value={text} \n        onChange={handleChange} \n      />\n      <Input \n        label=\"두 번째 입력\" \n        value={text} \n        onChange={handleChange} \n      />\n    </>\n  );\n}\n\nfunction Input({ label, value, onChange }) {\n  return (\n    <label>\n      {label}\n      {' '}\n      <input value={value} onChange={onChange} />\n    </label>\n  );\n}\n```"
+    },
+    {
+      "description": "Accordion 예시에서 부모 컴포넌트가 두 개의 Panel 상태를 관리하여 한 번에 하나의 패널만 열리도록 합니다.",
+      "code": "```javascript\nimport { useState } from 'react';\n\nexport default function Accordion() {\n  const [activeIndex, setActiveIndex] = useState(0);\n  return (\n    <> \n      <h2>아코디언 예제</h2>\n      <Panel\n        title=\"첫 번째 패널\"\n        isActive={activeIndex === 0}\n        onShow={() => setActiveIndex(0)}\n      >\n        이것은 첫 번째 패널입니다.\n      </Panel>\n      <Panel\n        title=\"두 번째 패널\"\n        isActive={activeIndex === 1}\n        onShow={() => setActiveIndex(1)}\n      >\n        이것은 두 번째 패널입니다.\n      </Panel>\n    </>\n  );\n}\n\nfunction Panel({ title, children, isActive, onShow }) {\n  return (\n    <section className=\"panel\">\n      <h3>{title}</h3>\n      {isActive ? (\n        <p>{children}</p>\n      ) : (\n        <button onClick={onShow}>열기</button>\n      )}\n    </section>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "상태를 끌어올린다는 것은 무엇을 의미합니까?",
+      "answer": "상태를 끌어올린다는 것은 여러 컴포넌트가 동일한 상태를 공유하기 위해, 컴포넌트에서 상태를 제거하고 가장 가까운 공통 부모 컴포넌트로 상태를 이동한 후, 이를 props로 자식 컴포넌트에 전달하여 제어한다는 의미입니다."
+    },
+    {
+      "question": "어떤 경우에 상태를 부모로 끌어올리는 것이 필요한가요?",
+      "answer": "두 개 이상의 컴포넌트 간의 상태가 서로 의존하거나, 동일한 상태 값을 공유해야 할 때 상태를 부모로 끌어올려야 합니다. 예를 들어, 두 개의 입력 필드가 있을 때, 한 필드에서 입력한 내용이 다른 필드에 즉시 반영되도록 하려면 상태를 부모 컴포넌트로 이동시켜야 합니다."
+    },
+    {
+      "question": "제어 컴포넌트와 비제어 컴포넌트의 차이는 무엇인가요?",
+      "answer": "제어 컴포넌트는 그 가치가 부모 컴포넌트로부터 전달된 props에 의해 관리되며, 부모가 상태를 완전히 제어합니다. 반면, 비제어 컴포넌트는 자체적인 지역 상태를 가지고 있어 부모의 영향 없이 독립적으로 동작합니다. 즉, 제어 컴포넌트는 부모가 상태를 제어하도록 설계된 반면, 비제어 컴포넌트는 더 적은 제어 권한을 가지며 사용하기 쉽습니다."
+    }
+  ]
+}

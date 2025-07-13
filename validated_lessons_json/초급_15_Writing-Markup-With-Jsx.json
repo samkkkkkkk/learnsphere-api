@@ -1,0 +1,29 @@
+{
+  "title": "JSX로 마크업 작성하기",
+  "level": "초급",
+  "core_concepts": "JSX는 JavaScript의 확장 문법으로, HTML과 비슷한 마크업을 JavaScript 코드 안에서 작성할 수 있게 해줍니다. JSX에서는 여러 가지 규칙이 있으며, 여러 엘리먼트를 포함할 때는 루트 엘리먼트로 감싸야 하고, 모든 태그는 반드시 닫아주어야 하며, 대소문자 규칙을 따라야 합니다.",
+  "code_examples": [
+    {
+      "description": "여러 엘리먼트를 포함하는 JSX 코드 예시. 루트 엘리먼트로 <div>로 감싸줍니다.",
+      "code": "```javascript\nexport default function TodoList() {\n  return (\n    <div>\n      <h1>Hedy Lamarr의 할 일 목록</h1>\n      <img\n        src=\"https://i.imgur.com/yXOvdOSs.jpg\"\n        alt=\"Hedy Lamarr\"\n        className=\"photo\"\n      />\n      <ul>\n        <li>새로운 신호등 발명하기</li>\n        <li>영화 장면 리허설하기</li>\n        <li>스펙트럼 기술 개선하기</li>\n      </ul>\n    </div>\n  );\n}\n```"
+    },
+    {
+      "description": "Fragment를 사용하여 불필요한 <div>를 피하는 JSX 코드 예시.",
+      "code": "```javascript\nexport default function TodoList() {\n  return (\n    <> \n      <h1>Hedy Lamarr의 할 일 목록</h1>\n      <img\n        src=\"https://i.imgur.com/yXOvdOSs.jpg\"\n        alt=\"Hedy Lamarr\"\n        className=\"photo\"\n      />\n      <ul>\n        <li>새로운 신호등 발명하기</li>\n        <li>영화 장면 리허설하기</li>\n        <li>스펙트럼 기술 개선하기</li>\n      </ul>\n    </>\n  );\n}\n```"
+    }
+  ],
+  "quizzes": [
+    {
+      "question": "JSX에서 반드시 닫아주어야 하는 태그의 예시는 무엇인가요?",
+      "answer": "<img> 태그와 같은 자체 닫힘 태그는 반드시 <img /> 형태로 작성해야 합니다."
+    },
+    {
+      "question": "JSX에서 여러 태그를 반환할 때 어떤 규칙을 따라야 하나요?",
+      "answer": "여러 개의 태그를 반환할 경우 반드시 하나의 루트 엘리먼트로 감싸야 합니다. 예를 들어 <div> 또는 Fragment (<>와 </>)를 사용해야 합니다."
+    },
+    {
+      "question": "JSX의 속성 이름은 어떤 규칙을 따라야 하나요?",
+      "answer": "JSX의 속성 이름은 대부분 캐멀 케이스(camelCase)로 작성해야 하며, 예약어인 'class' 대신 'className'을 사용해야 합니다."
+    }
+  ]
+}

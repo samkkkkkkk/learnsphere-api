@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manipulating The Dom With Refs</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 Manipulating The Dom With Refs 마스터하기 (고급)</h2>
+<h3>📘 Core Concepts</h3>
+<code>refs</code>는 React에서 DOM 노드에 접근하기 위해 사용됩니다. <code>useRef</code> hook을 사용하여 React가 관리하는 DOM 요소를 참조할 수 있으며, 이를 통해 DOM에 직접 조작을 수행할 수 있습니다. <code>useRef</code>는 컴포넌트의 렌더링 사이에 유지되는 변경 가능한 레퍼런스를 반환하며, <code>current</code> 프로퍼티를 통해 해당 DOM 노드에 접근하게 됩니다.
+<code>refs</code>는 일반적으로 포커스, 스크롤 위치를 조정하거나 브라우저 API 호출과 같은 비 파괴적인 상황에서 사용됩니다. 하지만 다른 컴포넌트에 있는 DOM 노드에 접근할 때는 ref를 prop처럼 전달해야 하며, 반드시 주의 깊게 다루어야 합니다. React의 상태 관리 시스템과 충돌을 피하기 위해, 꼭 필요한 경우에만 DOM을 직접 수정해야 합니다.
+<h3>💻 Code Examples</h3>
+<pre><code class="language-javascript">import { useRef } from 'react';
+<p>function MyInput({ ref }) { return <input ref={ref} />; }</p>
+<p>export default function MyForm() { const inputRef = useRef(null);</p>
+<p>function handleClick() { inputRef.current.focus(); }</p>
+<p>return (</p>
+<>
+<MyInput ref={inputRef} />
+<button onClick={handleClick}>
+<p>Focus the input</p>
+</button>
+</>
+<p>); }</code></pre></p>
+<pre><code class="language-javascript">import { useRef, useState } from 'react';
+<p>export default function TodoList() { const listRef = useRef(null); const [text, setText] = useState(''); const [todos, setTodos] = useState([]);</p>
+<p>function handleAdd() { const newTodo = { id: Date.now(), text: text }; setTodos([...todos, newTodo]); setText(''); listRef.current.lastChild.scrollIntoView({ behavior: 'smooth' }); }</p>
+<p>return (</p>
+<>
+<button onClick={handleAdd}>Add</button>
+<input value={text} onChange={(e) => setText(e.target.value)} />
+<ul ref={listRef}>
+<p>{todos.map(todo => (</p>
+<li key={todo.id}>{todo.text}</li>
+<p>))}</p>
+</ul>
+</>
+<p>); }</code></pre></p>
+<h3>📝 Quiz</h3>
+<p>1. <strong>문제</strong>: <code>useRef</code>를 사용하여 refs를 선언하였을 때, <code>current</code> 속성의 초기 값은 무엇인가요?</p>
+<strong>정답</strong>: <code>null</code>. <code>useRef</code>는 초기로 <code>null</code> 값을 가진 객체를 반환합니다. 이후 React가 DOM 노드를 생성할 때 해당 노드에 대한 참조를 <code>current</code>에 설정합니다.
+<p>2. <strong>문제</strong>: 여러 개의 DOM 노드를 관리해야 할 때 <code>refs</code>를 어떻게 설정해야 하나요?</p>
+<strong>정답</strong>: <code>ref</code> 콜백을 사용해야 합니다. <code>ref</code> 콜백을 사용하면 DOM 노드에 대한 참조를 정리할 수 있는 방법으로 배열이나 Map과 같은 데이터 구조를 통해 관리할 수 있습니다.
+<p>3. <strong>문제</strong>: React에서 DOM 노드를 직접 수정할 때 주의해야 할 점은 무엇인가요?</p>
+<strong>정답</strong>: React가 관리하는 DOM 노드를 직접 수정하는 것은 가능하면 피해야 합니다. DOM을 직접 조작하면 React의 상태와 충돌할 수 있으며, 그런 경우 시각적 이상 현상이 발생할 수 있습니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    

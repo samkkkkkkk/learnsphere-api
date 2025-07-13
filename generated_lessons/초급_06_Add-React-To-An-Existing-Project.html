@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add React To An Existing Project</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .lesson-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .quiz-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .quiz-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-question {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .quiz-number {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 2rem;
+        }
+        .quiz-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .quiz-toggle-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quiz-toggle-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        .quiz-answer-content {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0fff4;
+            border-left: 3px solid #48bb78;
+            border-radius: 4px;
+            color: #22543d;
+            line-height: 1.5;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lesson-container">
+        <h2>🚀 기존 프로젝트에 React 추가하기 (초급)</h2>
+<h3>📘 핵심 개념</h3>
+<p>기존 프로젝트에 React를 통합하는 것은 새로운 기능을 추가할 수 있는 강력한 방법입니다. React 컴포넌트를 기존 웹페이지 혹은 네이티브 모바일 앱에 점진적으로 도입하여 상호작용성을 높일 수 있습니다.</p>
+<p>1. <strong>환경 설정</strong>: Node.js와 같은 자바스크립트 환경에서 React를 사용해야 합니다. 이는 다양한 개발 도구와 패키지를 지원합니다. 2. <strong>프레임워크 통합</strong>: React 기반 프레임워크(예: Next.js, Gatsby)를 사용하여 전체 하위 경로를 React로 작성할 수 있습니다. 각 프레임워크의 설정에서 기본 경로를 지정해야 합니다. 3. <strong>부분 렌더링</strong>: HTML 페이지의 특정 부분에 React 컴포넌트를 렌더링하여 점진적으로 React를 통합할 수 있습니다. 이는 여러 단계로 나누어 수행할 수 있습니다.</p>
+<h3>💻 코드 예제</h3>
+<pre><code class="language-javascript">// 기존 HTML에서 React 컴포넌트를 렌더링하기
+<p>import { createRoot } from 'react-dom/client';</p>
+<p>function NavigationBar() { return <h1>Hello from React!</h1>; }</p>
+<p>// HTML의 특정 위치에 컴포넌트를 렌더링 const domNode = document.getElementById('navigation'); const root = createRoot(domNode); root.render(<NavigationBar />);</code></pre></p>
+<h3>📝 퀴즈</h3>
+<p>1. <strong>문제</strong>: 기존 웹 프로젝트에 React를 추가하기 위해 필요한 첫 번째 단계는 무엇인가요?</p>
+<strong>정답</strong>: Node.js를 설치하는 것입니다. React 및 자바스크립트 패키지를 효과적으로 사용하기 위해 로컬 개발 환경이 필요합니다.
+<p>2. <strong>문제</strong>: React를 통해 특정 HTML 요소에 컴포넌트를 렌더링하기 위해 사용할 수 있는 메서드는 무엇인가요?</p>
+<strong>정답</strong>: <code>createRoot</code>입니다. <code>createRoot</code>는 지정한 DOM 노드에 React 컴포넌트를 렌더링하는 데 사용됩니다.
+<p>3. <strong>문제</strong>: 기존 프로젝트의 모든 경로를 React로 완전히 구현하기 위해 선택할 수 있는 방법은 무엇인가요?</p>
+<strong>정답</strong>: React 기반 프레임워크를 사용하는 것입니다. 프레임워크 설정에서 기본 경로를 명시하고, 해당 경로의 요청이 React 앱에서 처리되도록 구성해야 합니다.
+    </div>
+    
+    <script>
+        function toggleAnswer(quizId) {
+            const answerElement = document.getElementById('answer-' + quizId.replace('quiz-', ''));
+            const button = event.target;
+            
+            if (answerElement.style.display === 'none') {
+                answerElement.style.display = 'block';
+                button.textContent = '정답 숨기기';
+            } else {
+                answerElement.style.display = 'none';
+                button.textContent = '정답 보기';
+            }
+        }
+    </script>
+</body>
+</html>
+    
