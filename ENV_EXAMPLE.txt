@@ -1,0 +1,9 @@
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/learnsphere_db
+
+# Qdrant (Vector DB)
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your-qdrant-api-key
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key 
