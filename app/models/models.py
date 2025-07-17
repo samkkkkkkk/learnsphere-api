@@ -31,4 +31,4 @@ class LessonBackup(Base):
     created_by = Column(String(100))
     prompt = Column(Text)
     params = Column(JSON)
-    action = Column(String(20))  # 'create', 'restore', 'delete' 등
+    action = Column(String(50))  # 'create', 'restore', 'delete' 등
