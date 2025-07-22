@@ -26,7 +26,7 @@ def generate_lesson_with_llm(level: str, topic: str, context: str) -> Dict:
         "code_examples": [
             {
                 "description": "코드 예시 설명",
-                "code": "```javascript\\n실제 JavaScript/JSX 코드\\n```"
+                "code": "```javascript\n실제 JavaScript/JSX 코드\n```"
             }
         ],
         "quizzes": [
@@ -46,6 +46,8 @@ def generate_lesson_with_llm(level: str, topic: str, context: str) -> Dict:
     - Learning Level: {level}
     - Topic: {topic}
     - Additional Request: Please include core concepts, code examples with actual JavaScript/JSX code, and three simple review quizzes with their answers and explanations related to the topic.
+    - 자세히, 예시, 해설을 충분히 포함해서 학습자가 이해하기 쉽도록 길고 구체적으로 작성해 주세요.
+    - 핵심 개념은 3~5문단 이상, 코드 예시는 2~3개, 각 예시마다 설명을 2~3문장 이상, 퀴즈는 3~5개, 각 퀴즈마다 해설을 2문장 이상 포함해 주세요.
 
     ---
     **Reference Documents:**
