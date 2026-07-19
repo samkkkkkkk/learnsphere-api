@@ -2,12 +2,14 @@
 
 import os
 from qdrant_client import QdrantClient
+from qdrant_client.http import models as qmodels
 from typing import Dict
 
 # --- 설정 ---
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-COLLECTION_NAME = "react-docs-complete"
+# 인덱싱 스크립트(index_data.py)와 동일한 환경 변수를 공유합니다.
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-complete")
 
 # --- Qdrant 클라이언트 초기화 ---
 qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
@@ -36,31 +38,39 @@ def get_contexts_by_level(level: str) -> Dict[str, str]:
         return {}
 
     try:
-        # Qdrant에서 모든 문서를 스크롤하여 가져옵니다.
-        # 실제 프로덕션에서는 더 효율적인 필터링 방법을 고려할 수 있습니다.
-        scrolled_points, _ = qdrant_client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=2000, # 전체 문서 개수에 맞게 조절
-            with_payload=True
+        # sub_category를 서버 사이드에서 필터링하고, 페이지네이션으로 전체를 순회합니다.
+        scroll_filter = qmodels.Filter(
+            must=[
+                qmodels.FieldCondition(
+                    key="sub_category",
+                    match=qmodels.MatchAny(any=target_sub_categories),
+                )
+            ]
         )
 
-        # 토픽(title)별로 텍스트 조각(context)을 그룹화합니다.
         lessons_by_title: Dict[str, list] = {}
-        for point in scrolled_points:
-            payload = point.payload
-            sub_category = payload.get('sub_category')
-            title = payload.get('title')
-            
-            if sub_category in target_sub_categories and title:
-                if title not in lessons_by_title:
-                    lessons_by_title[title] = []
-                lessons_by_title[title].append(payload.get('text', ''))
+        offset = None
+        while True:
+            points, offset = qdrant_client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=scroll_filter,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+            )
+            for point in points:
+                payload = point.payload or {}
+                title = payload.get('title')
+                if title:
+                    lessons_by_title.setdefault(title, []).append(payload.get('text', ''))
+            if offset is None:
+                break
 
         # 그룹화된 텍스트 조각들을 하나의 긴 컨텍스트 문자열로 합칩니다.
         final_contexts = {}
         for title, texts in lessons_by_title.items():
             final_contexts[title] = "\n\n---\n\n".join(texts)
-            
+
         print(f"  > [Qdrant] '{level}' 레벨에서 {len(final_contexts)}개의 토픽 컨텍스트를 성공적으로 가져왔습니다.")
         return final_contexts
 

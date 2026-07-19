@@ -27,7 +27,8 @@ class LessonBackup(Base):
     id = Column(Integer, primary_key=True, index=True)
     lesson_filename = Column(String(255), nullable=False)
     backup_filename = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # 파이프라인/백업 폴더명이 로컬 시간을 사용하므로 기본값도 로컬 시간으로 통일
+    created_at = Column(DateTime, default=datetime.now)
     created_by = Column(String(100))
     prompt = Column(Text)
     params = Column(JSON)

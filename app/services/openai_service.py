@@ -12,6 +12,20 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # --- OpenAI 클라이언트 초기화 ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def normalize_lesson(data: Dict, level: str, topic: str) -> Dict:
+    """
+    LLM 응답이 기대 스키마와 어긋나도 API 응답 모델(LessonContent)과
+    호환되도록 필수 키를 보정합니다.
+    """
+    return {
+        "title": str(data.get("title") or topic),
+        "level": str(data.get("level") or level),
+        "core_concepts": str(data.get("core_concepts") or ""),
+        "code_examples": data["code_examples"] if isinstance(data.get("code_examples"), list) else [],
+        "quizzes": data["quizzes"] if isinstance(data.get("quizzes"), list) else [],
+    }
+
+
 def generate_lesson_with_llm(level: str, topic: str, context: str) -> Dict:
     """
     검색된 컨텍스트와 사용자의 질문을 바탕으로 OpenAI API를 호출하여 학습 자료를 생성합니다.
@@ -71,10 +85,9 @@ def generate_lesson_with_llm(level: str, topic: str, context: str) -> Dict:
         content = response.choices[0].message.content
         
         if content:
-            # LLM 응답에서 JSON 부분만 정확히 파싱
+            # LLM 응답을 파싱하고, 스키마에 맞게 필수 키를 보정하여 반환
             lesson_data = json.loads(content)
-            # TODO: 필요 시, 응답받은 JSON의 구조를 검증하거나 기본값을 채우는 로직 추가
-            return lesson_data
+            return normalize_lesson(lesson_data, level, topic)
         else:
             raise ValueError("OpenAI 응답 내용이 비어있습니다.")
             

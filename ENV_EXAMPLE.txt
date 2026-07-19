@@ -1,9 +1,22 @@
 # Database
+# 애플리케이션이 접속하는 PostgreSQL 주소. 아래 POSTGRES_* 값과 일치해야 합니다.
 DATABASE_URL=postgresql://user:password@localhost:5432/learnsphere_db
+
+# --- Docker Compose용 PostgreSQL 설정 (docker-compose.yml이 참조) ---
+# 값을 바꾸면 위 DATABASE_URL도 같이 맞춰주세요. (미지정 시 아래 기본값 사용)
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+POSTGRES_DB=learnsphere_db
+POSTGRES_PORT=5432
 
 # Qdrant (Vector DB)
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=your-qdrant-api-key
+# 인덱싱 스크립트와 파이프라인이 공유하는 컬렉션 이름 (기본값: react-docs-complete)
+QDRANT_COLLECTION=react-docs-complete
 
 # OpenAI
-OPENAI_API_KEY=your-openai-api-key 
+OPENAI_API_KEY=your-openai-api-key
+
+# Admin API 인증 키 (관리자 엔드포인트/웹훅 호출 시 X-Admin-API-Key 헤더로 전달)
+ADMIN_API_KEY=your-admin-api-key

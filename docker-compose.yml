@@ -1,0 +1,40 @@
+# LearnSphere API — PostgreSQL 개발용 Docker Compose
+#
+# 사용법:
+#   docker compose up -d        # PostgreSQL 컨테이너 시작 (백그라운드)
+#   docker compose ps           # 상태 확인
+#   docker compose logs -f db   # 로그 확인
+#   docker compose down         # 중지 (데이터는 볼륨에 유지)
+#   docker compose down -v      # 중지 + 데이터 볼륨까지 삭제
+#
+# 접속 정보는 아래 값이 .env의 DATABASE_URL과 일치해야 합니다:
+#   DATABASE_URL=postgresql://user:password@localhost:5432/learnsphere_db
+#
+# 값을 바꾸려면 .env에 POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB / POSTGRES_PORT를
+# 지정하세요 (docker compose가 같은 폴더의 .env를 자동으로 읽습니다).
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: learnsphere-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-learnsphere_db}
+    ports:
+      # 호스트포트:컨테이너포트 — 호스트에서 localhost:5432로 접속
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # DB가 실제로 접속 가능해질 때까지 healthy로 표시하지 않음
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-learnsphere_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    name: learnsphere_postgres_data

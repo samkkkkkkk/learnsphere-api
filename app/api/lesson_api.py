@@ -8,6 +8,19 @@ router = APIRouter()
 # JSON 파일이 저장된 디렉토리 경로
 CONTENT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'generated_content'))
 
+
+def resolve_lesson_path(filename: str) -> str:
+    """
+    파일명을 검증하고 CONTENT_DIR 내부의 절대 경로로 변환합니다.
+    경로 구분자가 포함되거나 CONTENT_DIR 밖을 가리키는 요청은 거부합니다.
+    """
+    if os.path.basename(filename) != filename or not filename.endswith('.json'):
+        raise HTTPException(status_code=400, detail="유효하지 않은 파일명입니다.")
+    file_path = os.path.abspath(os.path.join(CONTENT_DIR, filename))
+    if os.path.commonpath([file_path, CONTENT_DIR]) != CONTENT_DIR:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파일 경로입니다.")
+    return file_path
+
 # 응답 모델 정의 (어떤 형태의 JSON이든 받을 수 있도록)
 class LessonContent(BaseModel):
     title: str
@@ -38,8 +51,8 @@ def get_lesson_content(filename: str):
     """
     생성된 학습 콘텐츠 JSON 파일을 읽어서 반환합니다.
     """
-    file_path = os.path.join(CONTENT_DIR, filename)
-    
+    file_path = resolve_lesson_path(filename)
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail=f"해당 파일을 찾을 수 없습니다: {filename}")
     

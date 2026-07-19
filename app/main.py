@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from .core.database import engine, get_db
+from .core.security import verify_admin_key
 from .models import models
 from .schemas import schemas
 from .crud import crud_content
@@ -63,8 +64,8 @@ def read_contents_by_subject(subject_name: str, db: Session = Depends(get_db)):
     contents = crud_content.get_contents_by_subject(db, subject_name=subject_name)
     return contents
 
-# Qdrant DB 변경 시 호출되는 웹훅
-@app.post("/api/v1/webhooks/content-updated", tags=["Webhooks"])
+# Qdrant DB 변경 시 호출되는 웹훅 (전체 재생성을 트리거하므로 관리자 키 인증 필요)
+@app.post("/api/v1/webhooks/content-updated", tags=["Webhooks"], dependencies=[Depends(verify_admin_key)])
 def handle_content_update(background_tasks: BackgroundTasks):
     """
     Qdrant DB 변경과 같은 이벤트가 발생했을 때 호출되는 웹훅.

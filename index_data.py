@@ -11,7 +11,8 @@ load_dotenv()
 # --- 1. 설정 (환경 변수에서 Qdrant 정보 가져오기) ---
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-COLLECTION_NAME = "react-docs-kr" # 새로운 데이터를 위해 컬렉션 이름을 변경합니다.
+# 파이프라인(app/services/qdrant_service.py)이 읽는 컬렉션과 동일해야 합니다.
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-complete")
 MODEL_NAME = 'distiluse-base-multilingual-cased-v1'
 
 # Qdrant URL 또는 API 키가 설정되지 않은 경우 오류를 발생시킵니다.
