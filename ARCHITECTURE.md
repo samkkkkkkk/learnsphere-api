@@ -16,7 +16,7 @@
 | 임베딩 | sentence-transformers (`distiluse-base-multilingual-cased-v1`) | 문서 인덱싱 시 벡터화 |
 | 설정 | python-dotenv | `.env` 환경 변수 로드 |
 
-> `requirements.txt`에는 langchain 계열 패키지도 포함되어 있으나 현재 코드에서는 사용되지 않습니다.
+> 의존성은 [uv](https://docs.astral.sh/uv/)로 관리합니다. 직접 의존성은 `pyproject.toml`, 전체 버전 고정은 `uv.lock`에 기록됩니다.
 
 ## 2. 디렉토리 구조
 
@@ -46,7 +46,8 @@ learnsphere-api/
 ├── index_data.py                 # React 문서 → Qdrant 인덱싱 스크립트 (독립 실행)
 ├── validated_json_server.py      # 검증된 레슨 전용 별도 서버 (포트 8001, 독립 실행)
 ├── react_docs_data.json          # React 문서 원본 데이터
-├── requirements.txt
+├── pyproject.toml                # 직접 의존성 정의 (uv)
+├── uv.lock                       # 전체 의존성 버전 고정 (uv)
 ├── ENV_EXAMPLE.txt               # .env 예시
 ├── PROCESS_AND_RUN.md            # 실행 방법 안내
 └── README.md
@@ -213,7 +214,7 @@ ADMIN_API_KEY=your-admin-api-key        # 관리자 API/웹훅 인증 키 (필�
 
 ```bash
 # 1. 의존성 설치
-pip install -r requirements.txt
+uv sync
 
 # 2. .env 작성 (위 참고)
 
@@ -221,15 +222,15 @@ pip install -r requirements.txt
 docker compose up -d
 
 # 4. (선택) 데이터 준비
-python index_data.py              # Qdrant 인덱싱
-python -m app.scripts.seed        # PostgreSQL 시딩
+uv run python index_data.py       # Qdrant 인덱싱
+uv run python -m app.scripts.seed # PostgreSQL 시딩
 
 # 5. 메인 서버 실행 (포트 8000)
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 # → http://127.0.0.1:8000/docs 에서 Swagger UI 확인
 
 # 6. (선택) 검증된 레슨 서버 (포트 8001)
-python validated_json_server.py
+uv run python validated_json_server.py
 ```
 
 CORS 허용 오리진: `localhost:5173`, `localhost:3000` (및 127.0.0.1 대응 — Vite/CRA 프론트엔드용).

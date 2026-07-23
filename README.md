@@ -24,8 +24,8 @@ Qdrant(벡터 DB)에 인덱싱된 React 문서를 컨텍스트로 활용해 Open
 ## 빠른 시작
 
 ```bash
-# 1. 의존성 설치
-pip install -r requirements.txt
+# 1. 의존성 설치 (uv가 .venv 생성 + uv.lock 기준으로 설치)
+uv sync
 
 # 2. 환경 변수 설정 (ENV_EXAMPLE.txt 참고하여 .env 생성)
 #    DATABASE_URL, QDRANT_URL, QDRANT_API_KEY, OPENAI_API_KEY, ADMIN_API_KEY
@@ -34,11 +34,11 @@ pip install -r requirements.txt
 docker compose up -d              # postgres:16 컨테이너 시작 (healthy까지 대기)
 
 # 4. (최초 1회) 데이터 준비
-python index_data.py              # React 문서 → Qdrant 인덱싱
-python -m app.scripts.seed        # 메타데이터 → PostgreSQL 시딩
+uv run python index_data.py       # React 문서 → Qdrant 인덱싱
+uv run python -m app.scripts.seed # 메타데이터 → PostgreSQL 시딩
 
 # 5. 서버 실행 (포트 8000)
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 서버 실행 후 http://127.0.0.1:8000/docs 에서 Swagger UI로 API를 확인할 수 있습니다.
