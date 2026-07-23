@@ -23,11 +23,11 @@ if not QDRANT_URL or not QDRANT_API_KEY:
 # --- 2. 데이터 로드 및 청킹 ---
 print("새로운 React 학습 데이터 로딩 중...")
 try:
-    # 새로운 JSON 파일 이름을 사용합니다.
+    # 가공 파이프라인 산출물(라벨 포함)을 읽는다. raw(react_docs_data.json)이 아님.
     with open('react_complete_learning_data.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 except FileNotFoundError:
-    print("오류: react_complete_learning_data.json 파일을 찾을 수 없습니다. 스크립트와 같은 디렉토리에 있는지 확인해주세요.")
+    print("오류: react_complete_learning_data.json 파일을 찾을 수 없습니다. 먼저 'uv run python -m app.scripts.enrich_learning_data'로 생성하세요.")
     exit()
 
 chunks = []
