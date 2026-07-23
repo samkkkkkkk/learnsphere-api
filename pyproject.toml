@@ -13,3 +13,14 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "uvicorn[standard]>=0.35.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+    "slow: 임베딩 모델 로드 등 느린 테스트 (in-memory Qdrant 관련성 검증)",
+]
