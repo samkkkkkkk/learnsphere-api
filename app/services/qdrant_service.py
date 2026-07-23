@@ -5,6 +5,8 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
 from typing import Dict
 
+from ..core.taxonomy import LEVEL_TO_SUBCATEGORIES
+
 # --- 설정 ---
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
@@ -26,12 +28,7 @@ def get_contexts_by_level(level: str) -> Dict[str, str]:
     """
     print(f"  > [Qdrant] '{level}' 레벨의 모든 컨텍스트 검색 시작...")
 
-    level_mapping = {
-        "초급": ["1단계: 사전 준비 ⚙️", "2단계: 메인 학습 코스 (초급) 入门"],
-        "중급": ["3단계: 메인 학습 코스 (중급) 🚀"],
-        "고급": ["4단계: 심화 탐구 🧠"]
-    }
-    target_sub_categories = level_mapping.get(level)
+    target_sub_categories = LEVEL_TO_SUBCATEGORIES.get(level)
 
     if not target_sub_categories:
         print(f"  > [Qdrant] 오류: 유효하지 않은 레벨입니다: {level}")
