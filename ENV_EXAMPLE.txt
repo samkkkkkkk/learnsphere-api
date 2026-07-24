@@ -26,3 +26,9 @@ EMBEDDING_MODEL=text-embedding-3-small
 
 # Admin API 인증 키 (관리자 엔드포인트/웹훅 호출 시 X-Admin-API-Key 헤더로 전달)
 ADMIN_API_KEY=your-admin-api-key
+
+# 학습자 로그인용 JWT 서명 키. HS256이므로 32바이트 이상을 쓰세요.
+# 예: python -c "import secrets; print(secrets.token_urlsafe(32))"
+JWT_SECRET_KEY=your-jwt-secret-key-at-least-32-bytes
+# 토큰 유효 기간(분). 기본 10080 = 7일
+JWT_EXPIRE_MINUTES=10080

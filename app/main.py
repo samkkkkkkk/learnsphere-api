@@ -13,7 +13,7 @@ from .crud import crud_content
 from .services import content_pipeline_service
 
 # --- API 라우터 임포트 ---
-from .api import lesson_api, admin_api, chat_api
+from .api import lesson_api, admin_api, chat_api, auth_api
 
 # 데이터베이스 스키마는 alembic으로 관리한다. 서버 기동 전 `uv run alembic upgrade head` 실행.
 
@@ -40,6 +40,7 @@ app.add_middleware(
 app.include_router(lesson_api.router, prefix="/api/v1")
 app.include_router(admin_api.router, prefix="/api/v1")
 app.include_router(chat_api.router, prefix="/api/v1")
+app.include_router(auth_api.router, prefix="/api/v1")
 
 
 @app.get("/", tags=["Root"])

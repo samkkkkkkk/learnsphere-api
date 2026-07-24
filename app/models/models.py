@@ -7,6 +7,20 @@ from sqlalchemy.orm import relationship
 from ..core.database import Base # database.py에서 Base를 가져옴
 from datetime import datetime
 
+class User(Base):
+    """학습자 계정.
+
+    관리자는 여전히 X-Admin-API-Key 체계를 쓰므로 role 컬럼을 두지 않는다.
+    (학습자 인증과 관리자 인증은 별개 경로다.)
+    """
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    nickname = Column(String(50), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+
 class Subject(Base):
     __tablename__ = 'subjects'
     subject_id = Column(Integer, primary_key=True, index=True)
