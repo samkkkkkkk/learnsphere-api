@@ -21,3 +21,4 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
+    sources: List[str] = Field(default_factory=list, description="답변 근거 문서 제목")
