@@ -21,8 +21,8 @@
 
 ### 구현
 - [x] `feature/vector-pipeline`에 커밋 1: `fix: Qdrant Cloud sub_category 필터링용 keyword payload 인덱스 추가` (index_data.py) — `7b694fb` (기 커밋 확인)
-- [x] 커밋 2: `docs: Phase 6 실 인덱싱/시딩 완료 및 Phase 0-5 체크리스트 실측 재검증 반영` (tasks.md) — `cbc5ad6`
-- [x] 커밋 3: `docs: Swagger 관리자 API 수동 테스트 가이드 및 결과 기록` (swagger_test_guide.md, swagger_test_results.md) — `09dc339`
+- [x] 커밋 2: `docs: Phase 6 실 인덱싱/시딩 완료 및 Phase 0-5 체크리스트 실측 재검증 반영` (tasks.md) — `18d5e35`
+- [x] 커밋 3: `docs: Swagger 관리자 API 수동 테스트 가이드 및 결과 기록` (swagger_test_guide.md, swagger_test_results.md) — `2411375`
 - [x] `git checkout -b feature/lesson-db-migration` 브랜치 생성 (사용자 기 생성 확인)
 - [x] PostgreSQL 기동 (`docker compose up -d`) 및 healthy 확인 — learnsphere-postgres Up 8h (healthy)
 - [x] 실행 중인 uvicorn 프로세스가 이 워크스페이스(`C:\WorkSpace\learnshpere\learnsphere-api`) 기준인지 확인, 다른 복사본이면 중지 — 실행 중인 uvicorn/python 프로세스 없음 확인
