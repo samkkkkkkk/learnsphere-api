@@ -11,7 +11,7 @@
 - [x] **Phase 2** — 신규 모델 3종 + 테스트 인프라
 - [x] **Phase 3** — 조회 API `/lessons` + 48개 import
 - [x] **Phase 4** — 생성 파이프라인 DB 전환
-- [ ] **Phase 5** — 관리자 세대/버전 API
+- [x] **Phase 5** — 관리자 세대/버전 API
 - [ ] **Phase 6** — 프론트 전환
 - [ ] **Phase 7** — 정리 (구 API 제거 + 문서)
 
@@ -132,20 +132,20 @@
 ## Phase 5 — 관리자 세대/버전 API
 
 ### 구현
-- [ ] `admin_api.py`: `GET /admin/generations` (목록 — id/source/status/시각/created_by/succeeded/실패 수)
-- [ ] `admin_api.py`: `GET /admin/generations/{id}` (상세 + failed_topics)
-- [ ] `admin_api.py`: `POST /admin/generations/{id}/activate` (세대 일괄 전환, archived 해제 포함)
-- [ ] `admin_api.py`: `GET /admin/lessons/{lesson_id}/versions` (버전 목록)
-- [ ] `admin_api.py`: `POST /admin/lessons/{lesson_id}/restore` (`{version_id, restored_by?}` → is_current 이동)
-- [ ] 구 백업 엔드포인트 4종 제거 (lesson-backups, restore-lesson-backup, backup-list, restore-backup-date)
-- [ ] `OUTPUT_DIR`/`BACKUP_DIR` 상수 제거 (admin_api.py:19-20)
-- [ ] `tests/test_lessons_api.py` 확장 (restore/activate/is_current 유일성, admin 401/200)
+- [x] `admin_api.py`: `GET /admin/generations` (목록 — id/source/status/시각/created_by/succeeded/실패 수)
+- [x] `admin_api.py`: `GET /admin/generations/{id}` (상세 + failed_topics)
+- [x] `admin_api.py`: `POST /admin/generations/{id}/activate` (세대 일괄 전환, archived 해제 포함 — 빈 세대 400, 없는 세대 404)
+- [x] `admin_api.py`: `GET /admin/lessons/{lesson_id}/versions` (버전 목록, source 포함)
+- [x] `admin_api.py`: `POST /admin/lessons/{lesson_id}/restore` (`{version_id, restored_by?}` → is_current 이동)
+- [x] 구 백업 엔드포인트 4종 제거 (lesson-backups, restore-lesson-backup, backup-list, restore-backup-date)
+- [x] `OUTPUT_DIR`/`BACKUP_DIR` 상수 제거 + 미사용 import(os/re/shutil/datetime/SessionLocal/LessonBackup) 정리
+- [x] `tests/test_lessons_api.py` 확장 — 세대 목록/상세, activate 전환, 버전 목록/복원, 인증 4개 엔드포인트 401 (4개 추가)
 
 ### 검증 (DoD)
-- [ ] Swagger: 버전 목록 → 과거 버전 restore → `GET /lessons/{id}` 복원 본문 확인 → 재복원 왕복 성공
-- [ ] activate로 import 세대 ↔ pipeline 세대 전환 동작
-- [ ] admin 키 없이 호출 시 401, 키 포함 시 200 (테스트)
-- [ ] `uv run pytest` 전체 통과
+- [x] 실 서버: 버전 목록 → 과거 버전(gen1) restore → version_id 확인 → 재복원 왕복 성공 (원상 복귀 완료)
+- [x] activate로 generation 1 ↔ 2 전환 동작 (실 서버 왕복 확인)
+- [x] admin 키 없이 호출 시 401, 키 포함 시 200 (테스트 + 실 서버)
+- [x] pytest 전체 60개 통과
 
 ---
 
