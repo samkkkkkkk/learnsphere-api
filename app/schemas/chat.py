@@ -3,7 +3,7 @@
 
 레슨 도메인(schemas.py)과 분리해 챗 관련 스키마만 모은다.
 """
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,8 @@ class ChatTurn(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, description="사용자 질문")
     history: List[ChatTurn] = Field(default_factory=list, description="이전 대화")
+    lesson_id: Optional[int] = Field(
+        default=None, description="지정 시 해당 레슨 본문을 답변 근거에 우선 포함")
 
 
 class ChatResponse(BaseModel):
