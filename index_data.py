@@ -86,6 +86,14 @@ client.recreate_collection(
     ),
 )
 
+# Qdrant Cloud는 payload 필드 필터링(scroll)에 keyword 인덱스가 필요하다.
+# (in-memory 모드는 인덱스 없이도 동작하므로 dry-run에서는 드러나지 않음)
+client.create_payload_index(
+    collection_name=COLLECTION_NAME,
+    field_name="sub_category",
+    field_schema=models.PayloadSchemaType.KEYWORD,
+)
+
 
 # --- 5. 데이터 벡터화 및 Qdrant에 저장 (Upsert) ---
 print("데이터 벡터화 및 Qdrant에 저장 시작...")
