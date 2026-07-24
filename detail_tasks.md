@@ -10,7 +10,7 @@
 - [x] **Phase 1** — alembic 도입 + baseline
 - [x] **Phase 2** — 신규 모델 3종 + 테스트 인프라
 - [x] **Phase 3** — 조회 API `/lessons` + 48개 import
-- [ ] **Phase 4** — 생성 파이프라인 DB 전환
+- [x] **Phase 4** — 생성 파이프라인 DB 전환
 - [ ] **Phase 5** — 관리자 세대/버전 API
 - [ ] **Phase 6** — 프론트 전환
 - [ ] **Phase 7** — 정리 (구 API 제거 + 문서)
@@ -109,23 +109,23 @@
 ## Phase 4 — 생성 파이프라인 DB 전환
 
 ### 구현
-- [ ] `app/services/openai_service.py`: 에러-레슨 삼킴(94-103행) 제거 → `LessonGenerationError` raise
-- [ ] `openai_service.py`: `normalize_lesson` 후 `LessonContentSchema.model_validate` 검증 (실패 시 raise)
-- [ ] `app/services/content_pipeline_service.py`: `OUTPUT_DIR`/`BACKUP_DIR`, 파일 쓰기/백업 복사, LessonBackup 기록, `create_index_file()` 제거
-- [ ] `content_pipeline_service.py`: `run_full_content_generation(generation_id)` 재작성 — 토픽별 try/except 실패 집계, 성공 시 upsert + version insert(is_current=False)
-- [ ] `content_pipeline_service.py`: 완료 시 `finalize_generation` 호출, 최상위 예외 시 status='failed'
-- [ ] `app/api/admin_api.py`: `POST /admin/generate-all-content` — generation 행 생성(running 존재 시 409), generation_id를 BackgroundTask에 전달, `{message, generation_id}` 반환
-- [ ] `admin_api.py`: `SessionLocal()` 직접 생성 → `Depends(get_db)` 전환
-- [ ] `app/main.py:68` 웹훅을 동일 헬퍼로 수정
-- [ ] `tests/test_pipeline_db.py` 작성 (qdrant/openai 모킹 e2e)
+- [x] `app/services/openai_service.py`: 에러-레슨 삼킴(94-103행) 제거 → `LessonGenerationError` raise
+- [x] `openai_service.py`: `normalize_lesson` 후 `LessonContentSchema.model_validate` 검증 (실패 시 raise, `exclude_none` 반환)
+- [x] `app/services/content_pipeline_service.py`: `OUTPUT_DIR`/`BACKUP_DIR`, 파일 쓰기/백업 복사, LessonBackup 기록, `create_index_file()` 제거 (전면 재작성)
+- [x] `content_pipeline_service.py`: `run_full_content_generation(generation_id)` 재작성 — 토픽별 try/except 실패 집계, 성공 시 upsert + version insert(is_current=False), 레슨 단위 커밋
+- [x] `content_pipeline_service.py`: 완료 시 `finalize_generation` 호출, 최상위 예외 시 status='failed' (+ 409 가드용 `request_full_generation` 헬퍼)
+- [x] `app/api/admin_api.py`: `POST /admin/generate-all-content` — generation 행 생성(running 존재 시 409), generation_id를 BackgroundTask에 전달, `{message, generation_id}` 반환
+- [x] `admin_api.py`: generate 엔드포인트 `Depends(get_db)` 전환 (구 백업 엔드포인트는 Phase 5에서 제거 예정이라 유지)
+- [x] `app/main.py:68` 웹훅을 동일 헬퍼(`request_full_generation`)로 수정
+- [x] `tests/test_pipeline_db.py` 작성 (qdrant/openai 모킹 e2e — 6개)
 
 ### 검증 (DoD)
-- [ ] generate 트리거 → lesson_generations에 running 행 생성
-- [ ] 진행 중 `GET /lessons`가 이전 세대 유지 → 완료 후 새 세대 전환 (테스트로 확인)
-- [ ] 부분 실패 시 실패 레슨 구버전 유지 + failed_topics 기록, 미포함 레슨 archived (테스트)
-- [ ] 검증 실패 토픽이 버전으로 저장되지 않음 — 에러 삼킴 회귀 방지 (테스트)
-- [ ] 중복 트리거 시 409
-- [ ] `uv run pytest` 전체 통과
+- [x] generate 트리거 → lesson_generations에 running 행 생성 + `{message, generation_id}` 반환 (테스트)
+- [x] 진행 중 `GET /lessons`가 이전 세대 유지 → 완료 후 새 세대 전환 (테스트)
+- [x] 부분 실패 시 실패 레슨 구버전 유지 + failed_topics 기록 (테스트)
+- [x] 검증 실패 토픽이 버전으로 저장되지 않음 — 에러 삼킴 회귀 방지 (테스트)
+- [x] 중복 트리거 시 409 (테스트) + 전체 실패 시 status='failed'·현행 유지 (테스트)
+- [x] pytest 전체 56개 통과. 실 서버 기동 + 401 인증 확인 (실 LLM 트리거는 비용 문제로 모킹 검증으로 갈음)
 
 ---
 

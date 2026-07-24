@@ -1,12 +1,14 @@
 # backend/app/api/admin_api.py
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends, Body
+from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
 import os, re, shutil
 
-from ..core.database import SessionLocal
+from ..core.database import SessionLocal, get_db
 from ..core.security import verify_admin_key
+from ..crud import crud_lessons
 from ..models.models import LessonBackup
 
 # services 폴더에서 파이프라인 함수 임포트
@@ -21,17 +23,25 @@ BACKUP_DIR = os.path.join(OUTPUT_DIR, 'backup')
 
 
 @router.post("/admin/generate-all-content", tags=["Admin"])
-def trigger_full_content_generation(background_tasks: BackgroundTasks):
+def trigger_full_content_generation(background_tasks: BackgroundTasks,
+                                    db: Session = Depends(get_db)):
     """
     [관리자용] 모든 레벨의 학습 콘텐츠를 처음부터 다시 생성합니다.
     이 작업은 백그라운드에서 실행되며, 완료까지 시간이 오래 걸릴 수 있습니다.
+    진행 중에도 사용자는 이전 세대의 레슨을 그대로 조회합니다.
     """
-    print("관리자 요청: 전체 콘텐츠 생성 파이프라인을 백그라운드에서 시작합니다.")
+    generation = content_pipeline_service.request_full_generation(db, created_by='admin')
+    if generation is None:
+        raise HTTPException(status_code=409, detail="이미 실행 중인 생성 작업이 있습니다.")
 
-    # 시간이 매우 오래 걸리는 작업을 백그라운드 태스크로 등록
-    background_tasks.add_task(content_pipeline_service.run_full_content_generation)
+    print(f"관리자 요청: 전체 콘텐츠 생성 파이프라인을 백그라운드에서 시작합니다. (generation {generation.id})")
+    background_tasks.add_task(
+        content_pipeline_service.run_full_content_generation, generation.id)
 
-    return {"message": "전체 콘텐츠 생성 작업이 백그라운드에서 시작되었습니다. 서버 로그를 확인하여 진행 상황을 모니터링하세요."}
+    return {
+        "message": "전체 콘텐츠 생성 작업이 백그라운드에서 시작되었습니다. 서버 로그를 확인하여 진행 상황을 모니터링하세요.",
+        "generation_id": generation.id,
+    }
 
 
 @router.get("/admin/lesson-backups", tags=["Admin"])

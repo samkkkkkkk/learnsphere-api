@@ -1,6 +1,6 @@
 # backend/app/main.py
 
-from fastapi import FastAPI, Depends, BackgroundTasks
+from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List
@@ -65,15 +65,21 @@ def read_contents_by_subject(subject_name: str, db: Session = Depends(get_db)):
 
 # Qdrant DB 변경 시 호출되는 웹훅 (전체 재생성을 트리거하므로 관리자 키 인증 필요)
 @app.post("/api/v1/webhooks/content-updated", tags=["Webhooks"], dependencies=[Depends(verify_admin_key)])
-def handle_content_update(background_tasks: BackgroundTasks):
+def handle_content_update(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Qdrant DB 변경과 같은 이벤트가 발생했을 때 호출되는 웹훅.
     실제 작업은 백그라운드로 넘기고 즉시 응답합니다.
     (현재는 전체 콘텐츠를 재생성하는 관리자 작업과 동일하게 동작합니다.)
     """
-    print("웹훅 수신: 콘텐츠 업데이트 파이프라인을 백그라운드에서 시작합니다.")
-    
-    # (수정) 호출하는 함수를 명확하게 지정
-    background_tasks.add_task(content_pipeline_service.run_full_content_generation)
-    
-    return {"message": "Content update pipeline accepted and running in the background."}
+    generation = content_pipeline_service.request_full_generation(db, created_by='webhook')
+    if generation is None:
+        raise HTTPException(status_code=409, detail="이미 실행 중인 생성 작업이 있습니다.")
+
+    print(f"웹훅 수신: 콘텐츠 업데이트 파이프라인을 백그라운드에서 시작합니다. (generation {generation.id})")
+    background_tasks.add_task(
+        content_pipeline_service.run_full_content_generation, generation.id)
+
+    return {
+        "message": "Content update pipeline accepted and running in the background.",
+        "generation_id": generation.id,
+    }
