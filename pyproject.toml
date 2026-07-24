@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.18.5",
     "fastapi>=0.116.1",
+    "langchain-openai>=1.4.1",
     "openai>=1.95.1",
     "psycopg2-binary>=2.9.10",
     "pydantic>=2.11.7",

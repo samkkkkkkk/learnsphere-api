@@ -17,6 +17,8 @@ QDRANT_COLLECTION=react-docs-complete
 
 # OpenAI
 OPENAI_API_KEY=your-openai-api-key
+# 튜터 챗이 사용하는 모델 (기본값: gpt-4o-mini)
+CHAT_MODEL=gpt-4o-mini
 
 # Admin API 인증 키 (관리자 엔드포인트/웹훅 호출 시 X-Admin-API-Key 헤더로 전달)
 ADMIN_API_KEY=your-admin-api-key
