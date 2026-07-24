@@ -14,118 +14,120 @@
 - [x] **Phase 3** — reference 규칙 확장 (→125)
 - [x] **Phase 4** — learn/rsc/rules 확장 (→141)
 - [x] **Phase 5** — 소비처 경로 통일 + 통합 dry-run
-- [ ] **Phase 6** — 실 인덱싱/시딩 (사용자 게이트) ← 파괴적, 사용자 승인 대기
+- [x] **Phase 6** — 실 인덱싱/시딩 (2026-07-24 사용자 승인 후 실행 완료)
 
 > **상태(2026-07-23):** Phase 0–5 구현 완료, 산출물 141개 생성, pytest 26개 전부 통과. Phase 6(실 Qdrant `recreate_collection` + DB 시딩)은 파괴적이라 사용자 승인 후 실행.
+>
+> **점검(2026-07-24):** Phase 0–5 전 체크리스트 항목을 실측 재검증 후 체크 완료 — 산출물 수치(95/125→141)·분포·라벨 정확 일치·pytest 26개 통과 재확인, `index_data.py` 전량(571 청크) in-memory dry-run 및 `seed.py` 임시 SQLite 매핑 스모크(141/141) 직접 실행으로 통과.
 
 ---
 
 ## Phase 0 — 스캐폴딩 & 골드 라벨 추출
 
 ### 구현
-- [ ] `app/scripts/enrichment/` 디렉토리 생성
-- [ ] `app/scripts/enrichment/__init__.py` 생성 (빈 파일)
-- [ ] 추출 스크립트 작성/실행: `git show 0febce2:react_complete_learning_data.json` 파싱
-- [ ] `content` 필드 제외, 5필드(`source_path`,`title`,`main_category`,`sub_category`,`topic_group`)만 추출
-- [ ] `source_path`를 정규화(백슬래시→`/`, 소문자)하여 dict 키로 사용
-- [ ] `app/scripts/enrichment/curated_labels.json` 저장 (UTF-8, `ensure_ascii=False`)
+- [x] `app/scripts/enrichment/` 디렉토리 생성
+- [x] `app/scripts/enrichment/__init__.py` 생성 (빈 파일)
+- [x] 추출 스크립트 작성/실행: `git show 0febce2:react_complete_learning_data.json` 파싱 (`extract_curated_labels.py`)
+- [x] `content` 필드 제외, 5필드(`source_path`,`title`,`main_category`,`sub_category`,`topic_group`)만 추출
+- [x] `source_path`를 정규화(백슬래시→`/`, 소문자)하여 dict 키로 사용
+- [x] `app/scripts/enrichment/curated_labels.json` 저장 (UTF-8, `ensure_ascii=False`)
 
 ### 검증 (DoD)
-- [ ] `curated_labels.json` 엔트리 수 == 95
-- [ ] 각 엔트리에 5필드 모두 존재
-- [ ] `main_category` 분포: `학습 과정 (Learn)`==41, `API 레퍼런스 (Reference)`==54
-- [ ] `sub_category` 6종 분포가 실측치와 일치 (1단계5·2단계10·3단계14·4단계12·React핵심API36·ReactDOM API18)
+- [x] `curated_labels.json` 엔트리 수 == 95
+- [x] 각 엔트리에 5필드 모두 존재
+- [x] `main_category` 분포: `학습 과정 (Learn)`==41, `API 레퍼런스 (Reference)`==54
+- [x] `sub_category` 6종 분포가 실측치와 일치 (1단계5·2단계10·3단계14·4단계12·React핵심API36·ReactDOM API18)
 
 ---
 
 ## Phase 1 — 최소 파이프라인 (95개 복원만)
 
 ### 구현
-- [ ] `app/scripts/enrich_learning_data.py` 생성 (`python -m app.scripts.enrich_learning_data` 실행 가능)
-- [ ] raw `react_docs_data.json` 로드 (165개)
-- [ ] 각 문서 `source` → 정규화 → `source_path` 생성
-- [ ] `curated_labels.json` 매칭 문서만 채택 (95개), 라벨 5필드 부여
-- [ ] `content`는 raw 원문 그대로 유지
-- [ ] 미매칭 문서는 건너뛰되 경고 출력 (`[SKIP] <source_path>`)
-- [ ] 프로젝트 루트에 `react_complete_learning_data.json` 기록 (UTF-8, `ensure_ascii=False`)
+- [x] `app/scripts/enrich_learning_data.py` 생성 (`python -m app.scripts.enrich_learning_data` 실행 가능)
+- [x] raw `react_docs_data.json` 로드 (165개)
+- [x] 각 문서 `source` → 정규화 → `source_path` 생성
+- [x] `curated_labels.json` 매칭 문서만 채택 (95개), 라벨 5필드 부여
+- [x] `content`는 raw 원문 그대로 유지
+- [x] 미매칭 문서는 건너뛰되 경고 출력 (`[SKIP] <source_path>`) — *Phase 4에서 하드 실패(ValueError)로 강화됨 (silent 오라벨 방지)*
+- [x] 프로젝트 루트에 `react_complete_learning_data.json` 기록 (UTF-8, `ensure_ascii=False`)
 
 ### 검증 (DoD)
-- [ ] 산출물 문서 수 == 95
-- [ ] 전 문서 6필드 존재, 필수 5개(`content`,`title`,`main_category`,`sub_category`,`source_path`) non-empty
-- [ ] 복원 95개 라벨이 `curated_labels.json`과 정확 일치 (assert 통과)
-- [ ] in-memory Qdrant dry-run: 청킹→임베딩→업서트→검색 성공 (실 클러스터 미접촉)
-- [ ] `seed.py` 매핑 스모크: JSON 로드 후 `LearningContent` 매핑 KeyError 없음 (임시 SQLite/롤백)
+- [x] 산출물 문서 수 == 95 — *Phase 1 시점 기준; 현재 141 (curated 95 + 규칙 46, `test_curated_and_rule_split`로 검증)*
+- [x] 전 문서 6필드 존재, 필수 5개(`content`,`title`,`main_category`,`sub_category`,`source_path`) non-empty
+- [x] 복원 95개 라벨이 `curated_labels.json`과 정확 일치 (assert 통과, `test_curated_labels_recovered`)
+- [x] in-memory Qdrant dry-run: 청킹→임베딩→업서트→검색 성공 (실 클러스터 미접촉, `test_search_relevance`)
+- [x] `seed.py` 매핑 스모크: JSON 로드 후 `LearningContent` 매핑 KeyError 없음 (임시 SQLite/롤백)
 
 ---
 
 ## Phase 2 — 택소노미 상수화 (드리프트 방지)
 
 ### 구현
-- [ ] `app/core/taxonomy.py` 생성
-- [ ] `LEVEL_TO_SUBCATEGORIES` 정의 (현 `qdrant_service.py:29-33` 내용 이전)
-- [ ] `MAIN_CATEGORIES`, `SUB_CATEGORIES` 정본 상수 정의
-- [ ] `app/services/qdrant_service.py:29-33` 하드코딩을 taxonomy import로 교체
-- [ ] `enrich_learning_data.py` 검증 로직이 taxonomy 상수 참조하도록 연결
+- [x] `app/core/taxonomy.py` 생성
+- [x] `LEVEL_TO_SUBCATEGORIES` 정의 (현 `qdrant_service.py:29-33` 내용 이전)
+- [x] `MAIN_CATEGORIES`, `SUB_CATEGORIES` 정본 상수 정의
+- [x] `app/services/qdrant_service.py:29-33` 하드코딩을 taxonomy import로 교체
+- [x] `enrich_learning_data.py` 검증 로직이 taxonomy 상수 참조하도록 연결 (`validate()`)
 
 ### 검증 (DoD)
-- [ ] `qdrant_service` import 정상, 레벨 검색 스모크 동작 불변
-- [ ] 산출 `sub_category` 집합 ⊆ `SUB_CATEGORIES`
-- [ ] `LEVEL_TO_SUBCATEGORIES`의 4개 레벨값이 모두 데이터에 실재
+- [x] `qdrant_service` import 정상, 레벨 검색 스모크 동작 불변 (`test_taxonomy_matches_qdrant_service_source` + in-memory 레벨 필터 dry-run)
+- [x] 산출 `sub_category` 집합 ⊆ `SUB_CATEGORIES`
+- [x] `LEVEL_TO_SUBCATEGORIES`의 4개 레벨값이 모두 데이터에 실재 (1단계9·2단계13·3단계14·4단계12)
 
 ---
 
 ## Phase 3 — reference 규칙 확장 (순수 경로 매핑)
 
 ### 구현
-- [ ] `app/scripts/enrichment/rules.py` 생성
-- [ ] 규칙: `reference/react/*` → `main_category=API 레퍼런스 (Reference)`, `sub_category=React 핵심 API`
-- [ ] 규칙: `reference/react-dom/*` → `sub_category=React DOM API`
-- [ ] `enrich_learning_data.py`: 미매칭 문서 중 규칙 적용 대상 라벨 생성
-- [ ] title은 frontmatter 정규식 추출 (`split('---',2)` 패턴 재사용)
-- [ ] `topic_group`은 None 허용
+- [x] `app/scripts/enrichment/rules.py` 생성
+- [x] 규칙: `reference/react/*` → `main_category=API 레퍼런스 (Reference)`, `sub_category=React 핵심 API`
+- [x] 규칙: `reference/react-dom/*` → `sub_category=React DOM API`
+- [x] `enrich_learning_data.py`: 미매칭 문서 중 규칙 적용 대상 라벨 생성
+- [x] title은 frontmatter 정규식 추출 (`split('---',2)` 패턴 재사용)
+- [x] `topic_group`은 None 허용
 
 ### 검증 (DoD)
-- [ ] 산출물 문서 수 == 125
-- [ ] 신규 30개의 `sub_category`가 규칙값과 일치 (react 13 → React 핵심 API, react-dom 17 → React DOM API)
-- [ ] title 추출 성공, 실패 문서는 경고 목록 출력
+- [x] 산출물 문서 수 == 125 — *Phase 3 시점 기준; 현재 141*
+- [x] 신규 30개의 `sub_category`가 규칙값과 일치 (react 13 → React 핵심 API, react-dom 17 → React DOM API)
+- [x] title 추출 성공, 실패 문서는 경고 목록 출력 — *경고 대신 파일명 stem fallback으로 처리 (react-dom 4개, `test_title_fallback_for_frontmatterless_docs`)*
 
 ---
 
 ## Phase 4 — learn 레벨 + rsc/rules 확장 (판단 규칙) → 141
 
 ### 선행 결정 (구현 전 확정)
-- [ ] 신규 learn 7개 레벨 배정 확정 (아래 초기 제안 검토)
-- [ ] `reference/rsc`(5)·`reference/rules`(4) `sub_category` 명칭 확정
+- [x] 신규 learn 7개 레벨 배정 확정 (초기 제안대로 확정)
+- [x] `reference/rsc`(5)·`reference/rules`(4) `sub_category` 명칭 확정 (`React Server Components`, `React 규칙`)
 
 ### 구현
-- [ ] `rules.py`에 learn 레벨 명시 매핑 추가:
-  - [ ] `setup.md`,`creating-a-react-app.md`,`build-a-react-app-from-scratch.md`,`index.md` → `1단계: 사전 준비 ⚙️`
-  - [ ] `describing-the-ui.md`,`adding-interactivity.md`,`managing-state.md` → `2단계: 메인 학습 코스 (초급) 入门`
-- [ ] `rules.py`에 신규 reference 경로 매핑 추가:
-  - [ ] `reference/rsc/*` → 확정된 신규 `sub_category`
-  - [ ] `reference/rules/*` → 확정된 신규 `sub_category`
-- [ ] 규칙 미적용 문서는 라벨 비우지 말고 경고 출력 (silent 오라벨 방지)
+- [x] `rules.py`에 learn 레벨 명시 매핑 추가:
+  - [x] `setup.md`,`creating-a-react-app.md`,`build-a-react-app-from-scratch.md`,`index.md` → `1단계: 사전 준비 ⚙️`
+  - [x] `describing-the-ui.md`,`adding-interactivity.md`,`managing-state.md` → `2단계: 메인 학습 코스 (초급) 入门`
+- [x] `rules.py`에 신규 reference 경로 매핑 추가:
+  - [x] `reference/rsc/*` → `React Server Components`
+  - [x] `reference/rules/*` → `React 규칙`
+- [x] 규칙 미적용 문서는 라벨 비우지 말고 경고 출력 (silent 오라벨 방지) — *경고보다 강한 하드 실패(ValueError)로 구현 (`test_build_enriched_hard_fails_on_unlabeled`)*
 
 ### 검증 (DoD)
-- [ ] 산출물 문서 수 == 141
-- [ ] blog(18)·warnings(6) 제외 확인 (포함되지 않음)
-- [ ] 모든 필수 필드 non-empty
-- [ ] `sub_category` ⊆ (taxonomy 6종 + rsc/rules 신규값)
-- [ ] 규칙 미적용(경고) 문서 0건
+- [x] 산출물 문서 수 == 141
+- [x] blog(18)·warnings(6) 제외 확인 (포함되지 않음)
+- [x] 모든 필수 필드 non-empty
+- [x] `sub_category` ⊆ (taxonomy 6종 + rsc/rules 신규값)
+- [x] 규칙 미적용(경고) 문서 0건
 
 ---
 
 ## Phase 5 — 소비처 경로 통일 + 통합 dry-run
 
 ### 구현
-- [ ] `app/scripts/seed.py:15-17` `DATA_FILE_PATH`를 프로젝트 루트 기준으로 정정 (`..`×3 → ×2)
-- [ ] `index_data.py` 경로도 동일 기준으로 정렬 (선택, 공통 상수화)
+- [x] `app/scripts/seed.py:15-17` `DATA_FILE_PATH`를 프로젝트 루트 기준으로 정정 (`..`×3 → ×2)
+- [x] `index_data.py` 경로도 동일 기준으로 정렬 (선택, 공통 상수화) — *루트 기준 상대경로로 정합 확인 (공통 상수화는 미적용, 선택 사항)*
 
 ### 검증 (DoD)
-- [ ] `index_data.py` 전량(141개) in-memory Qdrant 인덱싱·검색 성공
-- [ ] 레벨 필터 `초급`/`중급`/`고급` 각각 비어있지 않은 문서 반환
-- [ ] `seed.py`가 141개를 임시/롤백 DB에 매핑 성공 (KeyError 없음)
-- [ ] `source_path` 유니크 제약 위반 없음
+- [x] `index_data.py` 전량(141개) in-memory Qdrant 인덱싱·검색 성공 (571 청크 업서트·검색 확인, 2026-07-24 dry-run)
+- [x] 레벨 필터 `초급`/`중급`/`고급` 각각 비어있지 않은 문서 반환
+- [x] `seed.py`가 141개를 임시/롤백 DB에 매핑 성공 (KeyError 없음)
+- [x] `source_path` 유니크 제약 위반 없음 (distinct 141/141)
 
 ---
 
@@ -134,18 +136,20 @@
 > ⚠️ 파괴적 작업. `index_data.py`의 `recreate_collection`은 기존 Qdrant 컬렉션을 삭제 후 재생성한다. **반드시 사용자 승인 후 실행.**
 
 ### 선행 조건
-- [ ] `.env` 준비 확인 (`QDRANT_URL`,`QDRANT_API_KEY`,`DATABASE_URL` 등)
-- [ ] PostgreSQL 컨테이너 기동 (`docker compose up -d`)
-- [ ] 기존 Qdrant 컬렉션 덮어쓰기 사용자 최종 승인
+- [x] `.env` 준비 확인 (`QDRANT_URL`,`QDRANT_API_KEY`,`DATABASE_URL` 등)
+- [x] PostgreSQL 컨테이너 기동 (`docker compose up -d`, healthy 확인)
+- [x] 기존 Qdrant 컬렉션 덮어쓰기 사용자 최종 승인 (2026-07-24)
 
 ### 실행
-- [ ] `uv run python index_data.py` (Qdrant 인덱싱)
-- [ ] `uv run python -m app.scripts.seed` (PostgreSQL 시딩)
+- [x] `uv run python index_data.py` (Qdrant 인덱싱, 571 포인트 업로드)
+- [x] `uv run python -m app.scripts.seed` (PostgreSQL 시딩, 141개 추가)
 
 ### 검증 (DoD)
-- [ ] Qdrant 컬렉션 포인트 수 == 청크 수 (예상치 일치)
-- [ ] `get_contexts_by_level` 각 레벨(초급/중급/고급) 비어있지 않은 결과 반환
-- [ ] `learning_content` 테이블 행 수 == 141
+- [x] Qdrant 컬렉션 포인트 수 == 청크 수 (571 == 571)
+- [x] `get_contexts_by_level` 각 레벨(초급/중급/고급) 비어있지 않은 결과 반환 (22/14/12 토픽)
+- [x] `learning_content` 테이블 행 수 == 141 (distinct `source_path` 141)
+
+> **후속 수정(2026-07-24):** 실 클러스터 검증 중 `sub_category` 필터가 400(Bad Request)으로 실패 — Qdrant Cloud는 payload 필터에 keyword 인덱스가 필수(in-memory dry-run에서는 미노출). `index_data.py`에 `create_payload_index(sub_category, KEYWORD)` 추가 + 라이브 컬렉션에 인덱스 생성 후 재검증 통과.
 
 ---
 
