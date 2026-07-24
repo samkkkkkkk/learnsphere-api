@@ -8,7 +8,7 @@
 
 - [x] **Phase 0** — 사전 정리 (선행 커밋 + 브랜치 + 환경 확인)
 - [x] **Phase 1** — alembic 도입 + baseline
-- [ ] **Phase 2** — 신규 모델 3종 + 테스트 인프라
+- [x] **Phase 2** — 신규 모델 3종 + 테스트 인프라
 - [ ] **Phase 3** — 조회 API `/lessons` + 48개 import
 - [ ] **Phase 4** — 생성 파이프라인 DB 전환
 - [ ] **Phase 5** — 관리자 세대/버전 API
@@ -57,29 +57,29 @@
 ## Phase 2 — 신규 모델 + 테스트 인프라
 
 ### 구현
-- [ ] `app/models/models.py`: `LessonGeneration` 모델 추가 (source/status/created_by/prompt/params/started_at/completed_at/total_topics/succeeded/failed_topics)
-- [ ] `app/models/models.py`: `Lesson` 모델 추가 (level/slug/topic/archived_at/created_at, UNIQUE(level, slug))
-- [ ] `app/models/models.py`: `LessonVersion` 모델 추가 (lesson_id/generation_id FK, title/position/core_concepts/code_examples/quizzes/is_current/created_at, UNIQUE(lesson_id, generation_id))
-- [ ] `LessonVersion`에 partial unique index (lesson_id WHERE is_current — `postgresql_where`/`sqlite_where` 병기)
-- [ ] 기존 `LessonBackup` 모델에 deprecated 주석 추가
-- [ ] `0002_lesson_content_tables` 마이그레이션 생성 및 적용
-- [ ] `app/schemas/schemas.py`: `CodeExample`, `Quiz`, `LessonContentSchema`(core_concepts min_length=1), `LessonSummary`, `LessonDetail` 추가 (기존 `class Config: from_attributes` 컨벤션)
-- [ ] `app/crud/crud_lessons.py` 신설: `slugify(topic)` (기존 safe_title 로직 + lower)
-- [ ] `crud_lessons.py`: `upsert_lesson`, `insert_version` 구현
-- [ ] `crud_lessons.py`: `finalize_generation` 구현 (단일 트랜잭션 — is_current 전환 + archived 처리 + 부분 실패 허용)
-- [ ] `crud_lessons.py`: `get_lesson_index`, `get_lesson_detail` 구현
-- [ ] `crud_lessons.py`: `restore_version`, `activate_generation` 구현
-- [ ] `tests/conftest.py` 신설: app import 전 `os.environ.setdefault("DATABASE_URL", "sqlite://")`
-- [ ] `conftest.py`: in-memory SQLite + StaticPool `db_session` fixture
-- [ ] `conftest.py`: `dependency_overrides[get_db]` TestClient fixture + `ADMIN_API_KEY` monkeypatch
-- [ ] `tests/test_lessons_crud.py` 작성
+- [x] `app/models/models.py`: `LessonGeneration` 모델 추가 (source/status/created_by/prompt/params/started_at/completed_at/total_topics/succeeded/failed_topics)
+- [x] `app/models/models.py`: `Lesson` 모델 추가 (level/slug/topic/archived_at/created_at, UNIQUE(level, slug))
+- [x] `app/models/models.py`: `LessonVersion` 모델 추가 (lesson_id/generation_id FK, title/position/core_concepts/code_examples/quizzes/is_current/created_at, UNIQUE(lesson_id, generation_id))
+- [x] `LessonVersion`에 partial unique index (lesson_id WHERE is_current — `postgresql_where`/`sqlite_where` 병기)
+- [x] 기존 `LessonBackup` 모델에 deprecated 주석 추가
+- [x] `0002_lesson_content_tables` 마이그레이션 생성 및 적용
+- [x] `app/schemas/schemas.py`: `CodeExample`, `Quiz`, `LessonContentSchema`(core_concepts min_length=1), `LessonSummary`, `LessonDetail` 추가 (기존 `class Config: from_attributes` 컨벤션)
+- [x] `app/crud/crud_lessons.py` 신설: `slugify(topic)` (기존 safe_title 로직 + lower)
+- [x] `crud_lessons.py`: `upsert_lesson`, `insert_version` 구현
+- [x] `crud_lessons.py`: `finalize_generation` 구현 (단일 트랜잭션 — is_current 전환 + archived 처리 + 부분 실패 허용)
+- [x] `crud_lessons.py`: `get_lesson_index`, `get_lesson_detail` 구현
+- [x] `crud_lessons.py`: `restore_version`, `activate_generation` 구현 (+ 세대 관리 `create_generation`/`get_running_generation`/`fail_generation` 등)
+- [x] `tests/conftest.py` 신설: app import 전 `os.environ.setdefault("DATABASE_URL", "sqlite://")`
+- [x] `conftest.py`: in-memory SQLite + StaticPool `db_session` fixture
+- [x] `conftest.py`: `dependency_overrides[get_db]` TestClient fixture + `ADMIN_API_KEY` 환경 변수 고정 (+ dev 의존성 httpx 추가)
+- [x] `tests/test_lessons_crud.py` 작성 — 13개 테스트
 
 ### 검증 (DoD)
-- [ ] PostgreSQL 실 DB에 신규 3 테이블 + partial index 생성 확인
-- [ ] upsert 멱등성 테스트 통과 (같은 level+slug 재호출 시 중복 생성 없음)
-- [ ] is_current 유일성 테스트 통과 (동일 lesson에 current 2개 시도 → IntegrityError)
-- [ ] finalize 테스트 통과 (전환/archived/부분 실패 유지)
-- [ ] `uv run pytest` 전체 통과 (기존 앱 동작 무변화)
+- [x] PostgreSQL 실 DB에 신규 3 테이블 + partial index 생성 확인 (`uq_lesson_versions_current ... WHERE is_current` 실증)
+- [x] upsert 멱등성 테스트 통과 (같은 level+slug 재호출 시 중복 생성 없음)
+- [x] is_current 유일성 테스트 통과 (동일 lesson에 current 2개 시도 → IntegrityError)
+- [x] finalize 테스트 통과 (전환/archived/부분 실패 유지/전체 실패 무영향)
+- [x] pytest 전체 39개 통과 (기존 26 + 신규 13, 기존 앱 동작 무변화)
 
 ---
 
