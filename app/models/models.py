@@ -21,6 +21,38 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.now)
 
 
+class ChatSession(Base):
+    """튜터와의 대화 한 묶음.
+
+    lesson_id가 있으면 레슨 사이드패널에서 시작된 대화다.
+    """
+    __tablename__ = 'chat_sessions'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(255), nullable=True)
+    lesson_id = Column(Integer, ForeignKey('lessons.id'), nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    messages = relationship(
+        "ChatMessage", back_populates="session",
+        cascade="all, delete-orphan", order_by="ChatMessage.id")
+
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey('chat_sessions.id'),
+                        nullable=False, index=True)
+    role = Column(String(20), nullable=False)  # 'user' | 'assistant'
+    content = Column(Text, nullable=False)
+    # 답변 근거 문서 제목 (assistant 메시지에만)
+    sources = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    session = relationship("ChatSession", back_populates="messages")
+
+
 class Subject(Base):
     __tablename__ = 'subjects'
     subject_id = Column(Integer, primary_key=True, index=True)

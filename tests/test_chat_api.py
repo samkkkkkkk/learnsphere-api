@@ -7,7 +7,8 @@
 import pytest
 
 from app.agents import tutor_agent
-from app.crud import crud_lessons
+from app.core.auth import create_access_token
+from app.crud import crud_lessons, crud_users
 
 
 def seed_lesson(db, title="조건부 렌더링", level="초급"):
@@ -43,121 +44,162 @@ def fake_tutor(monkeypatch):
     return calls
 
 
-# --- Phase 1: 단일 질문 ---
+@pytest.fixture()
+def session_id(client, auth_headers):
+    """빈 대화 세션 하나."""
+    response = client.post("/api/v1/chat/sessions", json={}, headers=auth_headers)
+    return response.json()["id"]
 
-def test_chat_returns_answer(client, fake_tutor):
-    response = client.post("/api/v1/chat", json={"message": "useState가 뭐야?"})
+
+def send(client, headers, session_id, message):
+    return client.post(f"/api/v1/chat/sessions/{session_id}/messages",
+                       json={"message": message}, headers=headers)
+
+
+# --- 인증 ---
+
+def test_chat_requires_authentication(client):
+    assert client.get("/api/v1/chat/sessions").status_code == 401
+    assert client.post("/api/v1/chat/sessions", json={}).status_code == 401
+
+
+# --- 세션 ---
+
+def test_create_session_returns_id(client, auth_headers):
+    response = client.post("/api/v1/chat/sessions", json={}, headers=auth_headers)
+
+    assert response.status_code == 201
+    assert isinstance(response.json()["id"], int)
+
+
+def test_create_session_with_unknown_lesson_returns_404(client, auth_headers):
+    response = client.post("/api/v1/chat/sessions", json={"lesson_id": 9999},
+                           headers=auth_headers)
+
+    assert response.status_code == 404
+
+
+def test_list_sessions_returns_only_own(client, db_session, auth_headers, session_id):
+    other = crud_users.create_user(
+        db_session, email="other@example.com", password="password123",
+        nickname="다른사람")
+    other_headers = {"Authorization": f"Bearer {create_access_token(other.id)}"}
+    client.post("/api/v1/chat/sessions", json={}, headers=other_headers)
+
+    mine = client.get("/api/v1/chat/sessions", headers=auth_headers).json()
+
+    assert [item["id"] for item in mine] == [session_id]
+
+
+def test_access_other_users_session_returns_403(client, db_session, session_id):
+    other = crud_users.create_user(
+        db_session, email="other@example.com", password="password123",
+        nickname="다른사람")
+    other_headers = {"Authorization": f"Bearer {create_access_token(other.id)}"}
+
+    response = client.get(f"/api/v1/chat/sessions/{session_id}/messages",
+                          headers=other_headers)
+
+    assert response.status_code == 403
+
+
+def test_delete_session_removes_messages(client, auth_headers, session_id, fake_tutor):
+    send(client, auth_headers, session_id, "질문")
+
+    assert client.delete(f"/api/v1/chat/sessions/{session_id}",
+                         headers=auth_headers).status_code == 204
+    assert client.get("/api/v1/chat/sessions", headers=auth_headers).json() == []
+    # 지워진 세션의 메시지는 조회 자체가 막힌다
+    assert client.get(f"/api/v1/chat/sessions/{session_id}/messages",
+                      headers=auth_headers).status_code == 403
+
+
+# --- 메시지 ---
+
+def test_send_message_returns_answer_and_sources(client, auth_headers, session_id,
+                                                 fake_tutor):
+    response = send(client, auth_headers, session_id, "useState가 뭐야?")
 
     assert response.status_code == 200
-    assert response.json()["answer"] == "useState는 React의 상태 관리 훅입니다."
+    body = response.json()
+    assert body["answer"] == "useState는 React의 상태 관리 훅입니다."
+    assert body["sources"] == ["State"]
 
 
-def test_chat_passes_message_to_agent(client, fake_tutor):
-    client.post("/api/v1/chat", json={"message": "useEffect 설명해줘"})
+def test_send_message_persists_user_and_assistant(client, auth_headers, session_id,
+                                                  fake_tutor):
+    send(client, auth_headers, session_id, "useState가 뭐야?")
 
-    assert fake_tutor[0]["question"] == "useEffect 설명해줘"
+    messages = client.get(f"/api/v1/chat/sessions/{session_id}/messages",
+                          headers=auth_headers).json()
+
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+    assert messages[0]["content"] == "useState가 뭐야?"
+    assert messages[1]["sources"] == ["State"]
+
+
+def test_history_loaded_from_db(client, auth_headers, session_id, fake_tutor):
+    """2번째 질문에는 1번째 대화가 이력으로 붙는다 (요청 본문에는 없음)."""
+    send(client, auth_headers, session_id, "useState가 뭐야?")
+    send(client, auth_headers, session_id, "그럼 그건 언제 써?")
+
+    second_call = fake_tutor[1]
+    assert [turn.content for turn in second_call["history"]] == [
+        "useState가 뭐야?",
+        "useState는 React의 상태 관리 훅입니다.",
+    ]
+
+
+def test_first_message_sets_session_title(client, auth_headers, session_id, fake_tutor):
+    send(client, auth_headers, session_id, "useState가 뭐야?")
+    send(client, auth_headers, session_id, "두 번째 질문")
+
+    sessions = client.get("/api/v1/chat/sessions", headers=auth_headers).json()
+
+    # 제목은 첫 질문으로 고정되고 이후 질문에 덮이지 않는다
+    assert sessions[0]["title"] == "useState가 뭐야?"
 
 
 @pytest.mark.parametrize("message", ["", "   "])
-def test_chat_rejects_empty_message(client, fake_tutor, message):
-    response = client.post("/api/v1/chat", json={"message": message})
+def test_send_message_rejects_empty(client, auth_headers, session_id, fake_tutor,
+                                    message):
+    response = send(client, auth_headers, session_id, message)
 
     assert response.status_code == 422
     assert fake_tutor == []  # 에이전트를 호출하지 않고 차단
 
 
-def test_chat_returns_502_when_agent_fails(client, monkeypatch):
+def test_send_message_returns_502_when_agent_fails(client, monkeypatch, auth_headers,
+                                                   session_id):
     def _boom(question, history=(), lesson_context=None):
         raise tutor_agent.TutorError("openai 연결 실패: 상세 내부 정보")
 
     monkeypatch.setattr(tutor_agent, "run_tutor", _boom)
 
-    response = client.post("/api/v1/chat", json={"message": "안녕"})
+    response = send(client, auth_headers, session_id, "안녕")
 
     assert response.status_code == 502
     # 내부 오류 상세가 클라이언트로 새지 않아야 한다
     assert "openai" not in response.json()["detail"]
 
 
-# --- Phase 2: 멀티턴 ---
+# --- 레슨 컨텍스트 ---
 
-def test_chat_accepts_history(client, fake_tutor):
-    response = client.post("/api/v1/chat", json={
-        "message": "그럼 그건 언제 써?",
-        "history": [
-            {"role": "user", "content": "useState가 뭐야?"},
-            {"role": "assistant", "content": "상태 관리 훅입니다."},
-        ],
-    })
-
-    assert response.status_code == 200
-    assert [turn.content for turn in fake_tutor[0]["history"]] == [
-        "useState가 뭐야?",
-        "상태 관리 훅입니다.",
-    ]
-
-
-def test_chat_without_history_still_works(client, fake_tutor):
-    """history를 안 보내는 Phase 1 방식 요청도 그대로 동작해야 한다."""
-    response = client.post("/api/v1/chat", json={"message": "안녕"})
-
-    assert response.status_code == 200
-    assert fake_tutor[0]["history"] == []
-
-
-# --- Phase 5: 근거 문서 ---
-
-def test_chat_response_includes_sources(client, fake_tutor):
-    response = client.post("/api/v1/chat", json={"message": "useState가 뭐야?"})
-
-    assert response.json()["sources"] == ["State"]
-
-
-# --- Phase 6: 레슨 컨텍스트 ---
-
-def test_chat_with_lesson_id_injects_lesson_content(client, db_session, fake_tutor):
+def test_lesson_session_injects_lesson_content(client, db_session, auth_headers,
+                                               fake_tutor):
     lesson = seed_lesson(db_session)
+    created = client.post("/api/v1/chat/sessions", json={"lesson_id": lesson.id},
+                          headers=auth_headers).json()
 
-    response = client.post("/api/v1/chat", json={
-        "message": "이 예제 설명해줘",
-        "lesson_id": lesson.id,
-    })
+    send(client, auth_headers, created["id"], "이 예제 설명해줘")
 
-    assert response.status_code == 200
     context = fake_tutor[0]["lesson_context"]
     assert "조건에 따라 다른 JSX를 반환합니다." in context
     assert "cond ? <A /> : <B />" in context  # 코드 예시까지 포함
 
 
-def test_chat_with_unknown_lesson_id_returns_404(client, fake_tutor):
-    response = client.post("/api/v1/chat", json={
-        "message": "설명해줘",
-        "lesson_id": 9999,
-    })
+def test_plain_session_has_no_lesson_context(client, auth_headers, session_id,
+                                             fake_tutor):
+    send(client, auth_headers, session_id, "안녕")
 
-    assert response.status_code == 404
-    assert fake_tutor == []  # 에이전트를 호출하지 않는다
-
-
-def test_chat_with_archived_lesson_returns_404(client, db_session, fake_tutor):
-    """레슨 조회 API와 동일하게 아카이브된 레슨은 없는 것으로 취급한다."""
-    from datetime import datetime, timezone
-
-    lesson = seed_lesson(db_session)
-    lesson.archived_at = datetime.now(timezone.utc)
-    db_session.commit()
-
-    response = client.post("/api/v1/chat", json={
-        "message": "설명해줘",
-        "lesson_id": lesson.id,
-    })
-
-    assert response.status_code == 404
-
-
-def test_chat_without_lesson_id_passes_none(client, fake_tutor):
-    """레슨을 지정하지 않는 기존 요청은 그대로 동작한다."""
-    response = client.post("/api/v1/chat", json={"message": "안녕"})
-
-    assert response.status_code == 200
     assert fake_tutor[0]["lesson_context"] is None
