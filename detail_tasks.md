@@ -9,7 +9,7 @@
 - [x] **Phase 0** — 사전 정리 (선행 커밋 + 브랜치 + 환경 확인)
 - [x] **Phase 1** — alembic 도입 + baseline
 - [x] **Phase 2** — 신규 모델 3종 + 테스트 인프라
-- [ ] **Phase 3** — 조회 API `/lessons` + 48개 import
+- [x] **Phase 3** — 조회 API `/lessons` + 48개 import
 - [ ] **Phase 4** — 생성 파이프라인 DB 전환
 - [ ] **Phase 5** — 관리자 세대/버전 API
 - [ ] **Phase 6** — 프론트 전환
@@ -86,23 +86,23 @@
 ## Phase 3 — 조회 API + import
 
 ### 구현
-- [ ] `app/api/lesson_api.py`: `GET /api/v1/lessons` 추가 (is_current JOIN, archived 제외, level·position 정렬, `{레벨: [{id,title,number}]}` 형태)
-- [ ] `lesson_api.py`: `GET /api/v1/lessons/{lesson_id}` 추가 (없거나 archived → 404)
-- [ ] 구 `/lesson/index`, `/lesson/{filename}`은 유지 (공존)
-- [ ] `app/scripts/import_lessons_from_files.py` 신설: argparse (`--content-dir` 필수, `--created-by` 기본 'import', `--force`)
-- [ ] import: 파일명 `{level}_{NN}_{slug}.json` 파싱 (index.json·backup/ 제외)
-- [ ] import: 본문 `LessonContentSchema` 검증, 실패 파일 목록 출력 + 전체 rollback
-- [ ] import: generation(source='import') + lessons + versions 생성 → `finalize_generation`
-- [ ] import: lessons 테이블 비어있지 않으면 `--force` 없이는 abort
-- [ ] import 실행: `uv run python -m app.scripts.import_lessons_from_files --content-dir "C:\WorkSpace\generated_content"`
-- [ ] `tests/test_lessons_api.py` 작성 (목록 구조/정렬, 상세 필드, 404)
-- [ ] `tests/test_import_script.py` 작성 (tmp_path 샘플 — 성공/rollback/abort)
+- [x] `app/api/lesson_api.py`: `GET /api/v1/lessons` 추가 (is_current JOIN, archived 제외, level·position 정렬, `{레벨: [{id,title,number}]}` 형태)
+- [x] `lesson_api.py`: `GET /api/v1/lessons/{lesson_id}` 추가 (없거나 archived → 404, `response_model_exclude_none`으로 원본 충실 응답)
+- [x] 구 `/lesson/index`, `/lesson/{filename}`은 유지 (공존)
+- [x] `app/scripts/import_lessons_from_files.py` 신설: argparse (`--content-dir` 필수, `--created-by` 기본 'import', `--force`)
+- [x] import: 파일명 `{level}_{NN}_{slug}.json` 파싱 (index.json·backup/ 제외, 레벨 화이트리스트 검증)
+- [x] import: 본문 `LessonContentSchema` 검증, 실패 파일 목록 출력 + 전체 rollback
+- [x] import: generation(source='import') + lessons + versions 생성 → `finalize_generation`
+- [x] import: lessons 테이블 비어있지 않으면 `--force` 없이는 abort
+- [x] import 실행: 48개 이관 완료. **이관 중 발견/수정**: 퀴즈 33건의 `explanation` 필드가 스키마에 없어 유실됨 → `Quiz.explanation` Optional 추가 + `model_dump(exclude_none=True)` 저장 후 `--force` 재이관으로 해결
+- [x] `tests/test_lessons_api.py` 작성 (목록 구조/정렬, 상세 필드, 404, archived 숨김 — 5개)
+- [x] `tests/test_import_script.py` 작성 (성공/rollback/abort/explanation 보존 — 6개)
 
 ### 검증 (DoD)
-- [ ] `GET /api/v1/lessons` → 초급22·중급14·고급12 반환
-- [ ] 상세 1건을 원본 JSON 파일과 필드 대조 — 일치
-- [ ] 구 API(`/lesson/index`, `/lesson/{filename}`) 여전히 정상 (프론트 무영향)
-- [ ] `uv run pytest` 전체 통과
+- [x] `GET /api/v1/lessons` → 초급22·중급14·고급12 반환 (실 서버 확인)
+- [x] 상세 1건(초급_01_Editor-Setup)을 원본 JSON 파일과 필드 대조 — 완전 일치 (explanation 포함)
+- [x] 구 API 라우트 공존 확인 (이 복사본엔 파일이 없어 404 — 기존 동작 그대로, 프론트 무영향)
+- [x] pytest 전체 50개 통과
 
 ---
 

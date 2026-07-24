@@ -29,6 +29,7 @@ class CodeExample(BaseModel):
 class Quiz(BaseModel):
     question: str
     answer: str
+    explanation: Optional[str] = None  # LLM이 생성하는 선택 필드 (기존 파일 33/141건에 존재)
 
 class LessonContentSchema(BaseModel):
     """레슨 본문의 정본 스키마.
