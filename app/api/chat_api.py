@@ -14,7 +14,7 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=422, detail="질문 내용을 입력해주세요.")
 
     try:
-        answer = chat_service.ask(request.message)
+        answer = chat_service.ask(request.message, request.history)
     except chat_service.ChatServiceError as e:
         # 원인 예외 메시지는 서버 로그로만 남기고, 클라이언트에는 일반 문구를 준다.
         print(f"  > [Chat] 답변 생성 실패: {e}")

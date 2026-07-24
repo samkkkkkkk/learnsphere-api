@@ -1,14 +1,21 @@
 # app/services/chat_service.py
 """튜터 챗 LLM 호출.
 
-Phase 1에서는 검색(RAG) 없이 LLM에 질문을 그대로 전달한다.
+Phase 2에서는 검색(RAG) 없이 이전 대화 + 질문을 LLM에 전달한다.
 Qdrant 검색과 LangGraph 그래프는 이후 Phase에서 app/agents/로 옮겨간다.
 """
 import os
+from typing import List, Sequence
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
+from ..schemas.chat import ChatTurn
+
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
+
+# LLM에 실어 보낼 이전 대화 최대 개수. 토큰 비용과 응답 지연을 억제한다.
+MAX_HISTORY_TURNS = 10
 
 SYSTEM_PROMPT = (
     "당신은 React를 가르치는 한국어 튜터입니다. "
@@ -35,13 +42,24 @@ def _get_llm() -> ChatOpenAI:
     return _llm
 
 
-def ask(message: str) -> str:
-    """질문 하나를 LLM에 보내고 답변 텍스트를 반환한다."""
+def build_messages(message: str, history: Sequence[ChatTurn] = ()) -> List[BaseMessage]:
+    """시스템 프롬프트 + 최근 대화 + 이번 질문을 LangChain 메시지로 조립한다."""
+    messages: List[BaseMessage] = [SystemMessage(content=SYSTEM_PROMPT)]
+
+    for turn in list(history)[-MAX_HISTORY_TURNS:]:
+        if turn.role == "user":
+            messages.append(HumanMessage(content=turn.content))
+        else:
+            messages.append(AIMessage(content=turn.content))
+
+    messages.append(HumanMessage(content=message))
+    return messages
+
+
+def ask(message: str, history: Sequence[ChatTurn] = ()) -> str:
+    """이전 대화를 반영해 LLM에 질문하고 답변 텍스트를 반환한다."""
     try:
-        response = _get_llm().invoke([
-            ("system", SYSTEM_PROMPT),
-            ("human", message),
-        ])
+        response = _get_llm().invoke(build_messages(message, history))
     except Exception as e:
         raise ChatServiceError(f"LLM 호출 중 오류: {e}") from e
 
