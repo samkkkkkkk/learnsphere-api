@@ -3,17 +3,18 @@ import uuid
 import os
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient, models
-from sentence_transformers import SentenceTransformer
 
 # .env 파일에서 환경 변수를 로드합니다.
 load_dotenv()
+
+# 임베딩은 app/services/embedding_service.py가 담당합니다 (검색 경로와 동일한 모델 사용).
+from app.services import embedding_service  # noqa: E402 — load_dotenv 이후에 import
 
 # --- 1. 설정 (환경 변수에서 Qdrant 정보 가져오기) ---
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 # 파이프라인(app/services/qdrant_service.py)이 읽는 컬렉션과 동일해야 합니다.
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-complete")
-MODEL_NAME = 'distiluse-base-multilingual-cased-v1'
 
 # Qdrant URL 또는 API 키가 설정되지 않은 경우 오류를 발생시킵니다.
 if not QDRANT_URL or not QDRANT_API_KEY:
@@ -65,9 +66,10 @@ for doc in data:
 print(f"총 {len(chunks)}개의 데이터 조각 생성 완료.")
 
 
-# --- 3. 임베딩 모델 로드 ---
-print("임베딩 모델 로딩 중... (시간이 걸릴 수 있습니다)")
-model = SentenceTransformer(MODEL_NAME)
+# --- 3. 임베딩 생성 (OpenAI API, 100개씩 배치) ---
+print(f"임베딩 생성 중... (모델: {embedding_service.EMBEDDING_MODEL}, {len(chunks)}개)")
+vectors = embedding_service.embed_texts([chunk['text'] for chunk in chunks])
+print(f"임베딩 {len(vectors)}개 생성 완료.")
 
 
 # --- 4. Qdrant 클라이언트 초기화 및 컬렉션 생성 ---
@@ -81,7 +83,7 @@ print(f"Qdrant 컬렉션 '{COLLECTION_NAME}' 생성(또는 재생성) 중...")
 client.recreate_collection(
     collection_name=COLLECTION_NAME,
     vectors_config=models.VectorParams(
-        size=model.get_sentence_embedding_dimension(),
+        size=embedding_service.EMBEDDING_DIMENSION,
         distance=models.Distance.COSINE
     ),
 )
@@ -96,15 +98,15 @@ client.create_payload_index(
 
 
 # --- 5. 데이터 벡터화 및 Qdrant에 저장 (Upsert) ---
-print("데이터 벡터화 및 Qdrant에 저장 시작...")
+print("Qdrant에 저장 시작...")
 client.upload_points(
     collection_name=COLLECTION_NAME,
     points=[
         models.PointStruct(
             id=str(uuid.uuid4()), # 각 데이터 조각에 고유 ID 부여
-            vector=model.encode(chunk['text']).tolist(),
+            vector=vector,
             payload=chunk
-        ) for chunk in chunks
+        ) for chunk, vector in zip(chunks, vectors)
     ],
     wait=True, # 모든 데이터가 인덱싱될 때까지 대기
 )
