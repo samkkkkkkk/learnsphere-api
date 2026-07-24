@@ -7,7 +7,7 @@
 ## 진행 현황
 
 - [x] **Phase 0** — 사전 정리 (선행 커밋 + 브랜치 + 환경 확인)
-- [ ] **Phase 1** — alembic 도입 + baseline
+- [x] **Phase 1** — alembic 도입 + baseline
 - [ ] **Phase 2** — 신규 모델 3종 + 테스트 인프라
 - [ ] **Phase 3** — 조회 API `/lessons` + 48개 import
 - [ ] **Phase 4** — 생성 파이프라인 DB 전환
@@ -37,20 +37,20 @@
 ## Phase 1 — alembic 도입 + baseline
 
 ### 구현
-- [ ] `uv add alembic`
-- [ ] `alembic init alembic` 실행
-- [ ] `alembic/env.py` 수정: `load_dotenv()` → `DATABASE_URL`을 `config.set_main_option`으로 주입
-- [ ] `alembic/env.py`: `from app.models import models` import 후 `target_metadata = Base.metadata` 지정
-- [ ] `0001_baseline` 마이그레이션 작성 (subjects, learning_content, lesson_backups 현행 그대로)
-- [ ] `app/main.py:21` `models.Base.metadata.create_all(bind=engine)` 제거
-- [ ] 기존 DB에 `uv run alembic stamp 0001` 적용
-- [ ] `README.md`에 기동 절차 추가 (서버 시작 전 `uv run alembic upgrade head`)
+- [x] `uv add alembic` — alembic 1.18.5
+- [x] `alembic init alembic` 실행
+- [x] `alembic/env.py` 수정: `load_dotenv()` → `DATABASE_URL`을 `config.set_main_option`으로 주입 (미설정 시 명시적 에러)
+- [x] `alembic/env.py`: `from app.models import models` import 후 `target_metadata = Base.metadata` 지정
+- [x] `0001_baseline` 마이그레이션 작성 (subjects, learning_content, lesson_backups 현행 그대로)
+- [x] `app/main.py:21` `models.Base.metadata.create_all(bind=engine)` 제거 (+ 미사용 engine import 정리)
+- [x] 기존 DB에 `uv run alembic stamp 0001` 적용
+- [x] `README.md`에 기동 절차 추가 (서버 시작 전 `uv run alembic upgrade head`)
 
 ### 검증 (DoD)
-- [ ] 신규 빈 DB에서 `alembic upgrade head` → 3 테이블 생성 확인
-- [ ] 기존 DB에서 `alembic current` → `0001` 표시
-- [ ] 서버 기동 + `/api/health`, `/api/v1/lesson/index` 정상 (동작 무변화)
-- [ ] `uv run pytest` 기존 26개 통과
+- [x] 신규 빈 DB에서 `alembic upgrade head` → 3 테이블 생성 확인 (임시 DB alembic_check로 실증 후 삭제)
+- [x] 기존 DB에서 `alembic current` → `0001 (head)` 표시
+- [x] 서버 기동 + `/api/health` 200 (동작 무변화). `/lesson/index`는 404 — 이 복사본에 generated_content가 없는 기존 동작으로 Phase 1과 무관 (Phase 3에서 DB 기반으로 대체)
+- [x] pytest 기존 26개 통과 (주의: uv 트램폴린 오류로 `.venv\Scripts\python.exe -m pytest`로 실행. 경고 경로에 `C:\WorkSpace\learnsphere-api` 노출 — 과거 위치의 stale 캐시/복사본 존재 정황)
 
 ---
 

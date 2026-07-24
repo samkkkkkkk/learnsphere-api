@@ -7,7 +7,7 @@ from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from .core.database import engine, get_db
+from .core.database import get_db
 from .core.security import verify_admin_key
 from .models import models
 from .schemas import schemas
@@ -17,8 +17,7 @@ from .services import content_pipeline_service
 # --- API 라우터 임포트 ---
 from .api import lesson_api, admin_api
 
-# 데이터베이스 테이블 생성
-models.Base.metadata.create_all(bind=engine)
+# 데이터베이스 스키마는 alembic으로 관리한다. 서버 기동 전 `uv run alembic upgrade head` 실행.
 
 app = FastAPI(title="React Learning Platform API")
 

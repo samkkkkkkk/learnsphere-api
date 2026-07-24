@@ -33,11 +33,15 @@ uv sync
 # 3. PostgreSQL 실행 (Docker)
 docker compose up -d              # postgres:16 컨테이너 시작 (healthy까지 대기)
 
-# 4. (최초 1회) 데이터 준비
+# 4. DB 스키마 마이그레이션 (alembic)
+uv run alembic upgrade head       # 신규 DB: 전체 테이블 생성
+# (create_all 시절부터 쓰던 기존 DB는 최초 1회 `uv run alembic stamp 0001` 후 upgrade)
+
+# 5. (최초 1회) 데이터 준비
 uv run python index_data.py       # React 문서 → Qdrant 인덱싱
 uv run python -m app.scripts.seed # 메타데이터 → PostgreSQL 시딩
 
-# 5. 서버 실행 (포트 8000)
+# 6. 서버 실행 (포트 8000)
 uv run uvicorn app.main:app --reload
 ```
 
