@@ -12,8 +12,8 @@
 - [x] **Phase 3** — 조회 API `/lessons` + 48개 import
 - [x] **Phase 4** — 생성 파이프라인 DB 전환
 - [x] **Phase 5** — 관리자 세대/버전 API
-- [ ] **Phase 6** — 프론트 전환
-- [ ] **Phase 7** — 정리 (구 API 제거 + 문서)
+- [x] **Phase 6** — 프론트 전환 (learnsphere-frontend `feature/lesson-db-migration` 브랜치, 커밋 `2d9fc53`)
+- [x] **Phase 7** — 정리 (구 API 제거 + 문서)
 
 ---
 
@@ -152,38 +152,37 @@
 ## Phase 6 — 프론트 전환
 
 ### 구현
-- [ ] `src/api/axios.ts`: `baseURL: import.meta.env.VITE_API_BASE_URL ?? ''`, `withCredentials` 제거
-- [ ] `src/api/lessonApi.ts`: 하드코딩 `http://127.0.0.1:8000` 제거, 전 함수 axios 인스턴스로 통일
-- [ ] `lessonApi.ts`: 타입 갱신 — `LessonSummary {id,title,number}`, `LessonDetail`(id/version_id/updated_at 포함)
-- [ ] `lessonApi.ts`: `fetchLessonIndex()` → `GET /lessons`, `fetchLessonDetail(id: number)` → `GET /lessons/{id}`
-- [ ] `lessonApi.ts`: 백업 함수 4개 삭제 → `fetchGenerations`/`activateGeneration`/`fetchLessonVersions`/`restoreLessonVersion` 신설
-- [ ] `lessonApi.ts`: `setAdminApiKey(key)` — sessionStorage 저장 + 요청 인터셉터로 `X-Admin-API-Key` 자동 첨부
-- [ ] `src/pages/ReactLearnPage.tsx`: `filename` 참조 → `id` 치환 (132, 151, 218-219행 등), 렌더링 본문 무변경
-- [ ] `src/pages/AdminPanel.tsx`: 관리자 키 입력 필드 (미입력 시 admin 버튼 disable)
-- [ ] `AdminPanel.tsx`: 날짜별 백업 패널 → 세대 패널 (목록/전환/실패 토픽 표시)
-- [ ] `AdminPanel.tsx`: 레슨 백업 패널 → 버전 패널 (datalist: 표시 title·값 lesson id → 버전 목록/복원)
+- [x] `src/api/axios.ts`: `baseURL: import.meta.env.VITE_API_BASE_URL ?? ''`, `withCredentials` 제거
+- [x] `src/api/lessonApi.ts`: 하드코딩 `http://127.0.0.1:8000` 제거, 전 함수 axios 인스턴스로 통일
+- [x] `lessonApi.ts`: 타입 갱신 — `LessonSummary {id,title,number}`, `LessonDetail`(id/version_id/updated_at 포함), `Quiz.explanation` 추가
+- [x] `lessonApi.ts`: `fetchLessonIndex()` → `GET /lessons`, `fetchLessonDetail(id: number)` → `GET /lessons/{id}`
+- [x] `lessonApi.ts`: 백업 함수 4개 삭제 → `fetchGenerations`/`fetchGenerationDetail`/`activateGeneration`/`fetchLessonVersions`/`restoreLessonVersion` 신설
+- [x] `axios.ts`: `setAdminApiKey(key)` — sessionStorage 저장 + `/admin/` 요청에만 `X-Admin-API-Key` 자동 첨부 인터셉터
+- [x] `src/pages/ReactLearnPage.tsx`: `filename` 참조 → `id` 치환, 렌더링 본문 무변경 (+ 퀴즈 해설 표시 추가)
+- [x] `src/pages/AdminPanel.tsx`: 관리자 키 입력 필드 (미입력 시 생성 버튼 disable, 목록 안내)
+- [x] `AdminPanel.tsx`: 날짜별 백업 패널 → 세대 패널 (목록/전환/실패 토픽 표시)
+- [x] `AdminPanel.tsx`: 레슨 백업 패널 → 버전 패널 (레슨 select → 버전 목록/복원, 활성 버전 표시)
 
 ### 검증 (DoD)
-- [ ] 학습 페이지: 레벨 전환·레슨 카드·상세(core_concepts/code_examples/quizzes) 렌더링 정상
-- [ ] AdminPanel: 키 입력 후 생성 트리거 성공 — 401 버그 해소 확인
-- [ ] AdminPanel: 세대 목록/전환, 버전 목록/복원 e2e
-- [ ] `npm run build` (tsc) 통과 — filename 참조 잔존 시 타입 에러로 검출
+- [x] `npm run build` (tsc -b + vite) 통과 — filename 참조 잔존 없음
+- [x] 백엔드 + Vite dev 서버 기동 후 프록시 경유 `GET /api/v1/lessons` 200 확인 (상대경로 + 프록시 배선 검증)
+- [ ] **(수동 확인 필요)** 브라우저에서 학습 페이지 렌더링·레벨 전환, AdminPanel 키 입력 후 생성/세대 전환/버전 복원 클릭 e2e
 
 ---
 
 ## Phase 7 — 정리
 
 ### 구현
-- [ ] `lesson_api.py`: 구 `/lesson/index`, `/lesson/{filename}`, `CONTENT_DIR`, `resolve_lesson_path` 제거
-- [ ] `main.py:43-45`: StaticFiles `/static/content` 마운트 제거
-- [ ] `app/scripts/migrate_backup_to_datefolders.py` 삭제
-- [ ] `ARCHITECTURE.md` 갱신 (저장 구조: 파일 → PG 3 테이블, 엔드포인트 표 교체)
-- [ ] `README.md`, `PROCESS_AND_RUN.md` 갱신 (alembic 절차, import 사용법)
-- [ ] `swagger_test_guide.md` 갱신 (신 엔드포인트 목록)
-- [ ] `C:\WorkSpace\generated_content` 아카이브 처리 방침 확정 (사용자 판단)
+- [x] `lesson_api.py`: 구 `/lesson/index`, `/lesson/{filename}`, `CONTENT_DIR`, `resolve_lesson_path` 제거
+- [x] `main.py`: StaticFiles `/static/content` 마운트 제거 (+ 미사용 import 정리)
+- [x] `app/scripts/migrate_backup_to_datefolders.py` 삭제 (git rm)
+- [x] `ARCHITECTURE.md` 갱신 (저장 구조·데이터 흐름·DB 모델 3종 추가·엔드포인트 표 교체·수정 이력 2026-07-24 추가, §7 데이터 파일 누락 경고도 최신화)
+- [x] `README.md` 갱신 (주요 기능·엔드포인트 표·프로젝트 구조·저장 위치 문구). `PROCESS_AND_RUN.md`는 구 API 언급이 없어 무변경
+- [x] `swagger_test_guide.md` 갱신 (5·6장 신 엔드포인트로 교체, 이관 공지). `swagger_test_results.md`는 과거 실측 기록이라 보존
+- [ ] `C:\WorkSpace\generated_content` 아카이브 처리 방침 확정 — **사용자 판단 대기** (현재 그대로 보존, 코드 참조 없음)
 
 ### 검증 (DoD)
-- [ ] app 코드에서 `generated_content` 참조 0 (grep 확인, 문서·아카이브 언급 제외)
-- [ ] `uv run pytest` 전체 통과 + `npm run build` 통과
-- [ ] 서버 기동 후 학습/관리 화면 스모크 테스트
-- [ ] 구 엔드포인트 호출 시 404 확인
+- [x] app 코드에서 `generated_content` 참조 0 (grep 확인 — import 스크립트 독스트링·deprecated 주석만 잔존)
+- [x] pytest 전체 60개 통과 + `npm run build` 통과
+- [x] 서버 기동: `/api/v1/lessons` 200, 구 `/lesson/index` 404, `/static/content/*` 404 확인
+- [ ] **(수동 확인 필요)** 브라우저에서 학습/관리 화면 스모크 테스트

@@ -2,13 +2,13 @@
 
 React 학습 플랫폼 **LearnSphere**의 백엔드 API 서버입니다.
 
-Qdrant(벡터 DB)에 인덱싱된 React 문서를 컨텍스트로 활용해 OpenAI LLM(`gpt-4o-mini`)으로 한국어 학습 콘텐츠(레슨)를 자동 생성하고, 생성된 레슨을 JSON 파일 + PostgreSQL 이력과 함께 관리·제공합니다.
+Qdrant(벡터 DB)에 인덱싱된 React 문서를 컨텍스트로 활용해 OpenAI LLM(`gpt-4o-mini`)으로 한국어 학습 콘텐츠(레슨)를 자동 생성하고, 생성된 레슨을 **PostgreSQL(세대/버전 모델)**로 관리·제공합니다.
 
 ## 주요 기능
 
-- **레슨 자동 생성**: 레벨(초급/중급/고급)별로 Qdrant에서 토픽 컨텍스트를 수집하고, LLM으로 핵심 개념·코드 예시·퀴즈가 포함된 레슨 JSON을 생성 (백그라운드 실행)
-- **레슨 제공 API**: 프론트엔드(Vite/CRA)를 위한 레슨 목차(`index.json`) 및 개별 레슨 조회
-- **백업/복원**: 레슨 재생성 시 기존 파일을 날짜별 폴더로 자동 백업하고 DB에 이력 기록, 관리자 API로 개별/일괄 복원 지원
+- **레슨 자동 생성**: 레벨(초급/중급/고급)별로 Qdrant에서 토픽 컨텍스트를 수집하고, LLM으로 핵심 개념·코드 예시·퀴즈가 포함된 레슨을 생성해 DB에 적재 (백그라운드 실행, 세대 단위 원자 전환 — 진행 중에도 이전 세대 서빙)
+- **레슨 제공 API**: 프론트엔드(Vite/CRA)를 위한 레벨별 레슨 목록 및 개별 레슨 조회 (ID 기반)
+- **세대/버전 관리**: 재생성마다 불변 버전이 쌓이며, 관리자 API로 버전 단위 복원·세대 단위 전환 지원 (데이터 손실 없는 왕복)
 - **웹훅**: 원본 데이터 변경 이벤트 수신 시 콘텐츠 재생성 파이프라인 트리거
 
 ## 기술 스택
@@ -54,12 +54,14 @@ uv run uvicorn app.main:app --reload
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | GET | `/api/health` | 헬스 체크 |
-| GET | `/api/v1/lesson/index` | 레슨 목차 조회 |
-| GET | `/api/v1/lesson/{filename}` | 개별 레슨 조회 |
+| GET | `/api/v1/lessons` | 레벨별 레슨 목록 조회 |
+| GET | `/api/v1/lessons/{lesson_id}` | 개별 레슨 조회 (활성 버전) |
 | GET | `/api/v1/contents/{subject_name}` | 과목별 콘텐츠 메타데이터 조회 |
-| POST | `/api/v1/admin/generate-all-content` | [관리자] 전체 레슨 재생성 (백그라운드) |
-| GET | `/api/v1/admin/backup-list` | [관리자] 날짜별 백업 목록 조회 |
-| POST | `/api/v1/admin/restore-lesson-backup` | [관리자] 백업본으로 레슨 복원 |
+| POST | `/api/v1/admin/generate-all-content` | [관리자] 전체 레슨 재생성 (백그라운드, 중복 실행 시 409) |
+| GET | `/api/v1/admin/generations` | [관리자] 생성 세대 목록 조회 |
+| POST | `/api/v1/admin/generations/{id}/activate` | [관리자] 특정 세대로 일괄 전환 |
+| GET | `/api/v1/admin/lessons/{id}/versions` | [관리자] 레슨 버전 목록 조회 |
+| POST | `/api/v1/admin/lessons/{id}/restore` | [관리자] 특정 버전으로 복원 |
 
 관리자 엔드포인트와 웹훅은 `X-Admin-API-Key` 헤더 인증이 필요합니다 (`.env`의 `ADMIN_API_KEY`).
 전체 엔드포인트 목록은 [ARCHITECTURE.md](./ARCHITECTURE.md#5-api-엔드포인트)를 참고하세요.
@@ -69,19 +71,21 @@ uv run uvicorn app.main:app --reload
 ```
 learnsphere-api/
 ├── app/
-│   ├── main.py           # 앱 진입점 (라우터 등록, CORS, 정적 파일)
+│   ├── main.py           # 앱 진입점 (라우터 등록, CORS, 웹훅)
 │   ├── api/              # API 라우터 (lesson, admin)
 │   ├── core/             # DB 연결 설정
-│   ├── crud/             # DB 조회 로직
+│   ├── crud/             # DB 조회 로직 (레슨 세대/버전 포함)
 │   ├── models/           # SQLAlchemy ORM 모델
 │   ├── schemas/          # Pydantic 스키마
 │   ├── services/         # 콘텐츠 생성 파이프라인 (Qdrant, OpenAI)
-│   └── scripts/          # 시딩·마이그레이션 스크립트
+│   └── scripts/          # 시딩·이관 스크립트
+├── alembic/              # DB 스키마 마이그레이션
+├── tests/                # pytest 테스트
 ├── index_data.py         # Qdrant 인덱싱 스크립트 (독립 실행)
 └── validated_json_server.py  # 검증된 레슨 전용 별도 서버 (포트 8001)
 ```
 
-생성된 레슨은 상위 폴더의 `../generated_content/`에 저장됩니다.
+생성된 레슨은 PostgreSQL `lessons`/`lesson_versions` 테이블에 세대(generation) 단위로 저장됩니다. (과거 파일 저장소 `../generated_content/`는 아카이브로만 보존)
 
 ## 문서
 
