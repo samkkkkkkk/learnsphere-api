@@ -1,9 +1,12 @@
 # LearnSphere API — 아키텍처 및 코드 문서
 
 > React 학습 플랫폼의 백엔드 API 서버.
-> Qdrant(벡터 DB)에 인덱싱된 React 공식 문서를 컨텍스트로 삼아 OpenAI LLM으로 한국어 학습 콘텐츠(레슨)를 자동 생성하고, 이를 **PostgreSQL(세대/버전 모델)**로 관리·제공하는 FastAPI 애플리케이션입니다.
+> Qdrant(벡터 DB)에 인덱싱된 React 공식 문서를 컨텍스트로 삼아 OpenAI LLM으로 한국어 학습 콘텐츠(레슨)를 자동 생성하고, 이를 **PostgreSQL(세대/버전 모델)**로 관리·제공하며, 같은 문서를 근거로 **RAG 튜터 챗**을 제공하는 FastAPI 애플리케이션입니다.
 >
-> (2026-07-24) 레슨 저장소가 `generated_content/` 파일에서 PostgreSQL로 이관되었습니다 — 설계 근거는 [DB_MIGRATION_PLAN.md](./DB_MIGRATION_PLAN.md) 참고.
+> - (2026-07-24) 레슨 저장소가 `generated_content/` 파일에서 PostgreSQL로 이관 — 근거는 [DB_MIGRATION_PLAN.md](./DB_MIGRATION_PLAN.md)
+> - (2026-07-27) AI 튜터 챗봇(Phase 1~12 / M1) 완료 — 학습자 인증(JWT), 대화 영속화, SSE 스트리밍 추가. 기획은 [../chat_bot_plan.md](../chat_bot_plan.md), Phase 계획은 [../chat_bot_detail.md](../chat_bot_detail.md)
+>
+> **이 문서는 레퍼런스입니다.** 코드를 처음 읽는다면 설계 의도를 설명하는 [CODE_GUIDE.md](./CODE_GUIDE.md)부터 보세요.
 
 ---
 
@@ -11,14 +14,19 @@
 
 | 구분 | 기술 | 용도 |
 |---|---|---|
-| 웹 프레임워크 | FastAPI 0.116 + Uvicorn | REST API 서버 |
-| 관계형 DB | PostgreSQL (SQLAlchemy 2.0, psycopg2, alembic) | 레슨 본문(세대/버전), 콘텐츠 메타데이터 |
-| 벡터 DB | Qdrant (qdrant-client 1.14) | React 문서 임베딩 저장·검색 |
-| LLM | OpenAI API (`gpt-4o-mini`) | 학습 자료(레슨) JSON 생성 |
-| 임베딩 | sentence-transformers (`distiluse-base-multilingual-cased-v1`) | 문서 인덱싱 시 벡터화 |
+| 웹 프레임워크 | FastAPI + Uvicorn | REST API 서버 |
+| 관계형 DB | PostgreSQL (SQLAlchemy 2.0, psycopg2, alembic) | 레슨 본문(세대/버전), 유저·대화, 콘텐츠 메타데이터 |
+| 벡터 DB | Qdrant (qdrant-client) | React 문서 임베딩 저장·검색 |
+| LLM | OpenAI API (`gpt-4o-mini`, 환경 변수 `CHAT_MODEL`) | 레슨 JSON 생성 + 튜터 챗 |
+| 임베딩 | OpenAI API (`text-embedding-3-small`, 1536차원) | 인덱싱·검색 공용 |
+| 에이전트 | LangGraph 1.x + LangChain Core 1.x | 튜터 그래프 (retrieve → generate) |
+| 인증 | PyJWT (HS256) + bcrypt | 학습자 로그인 (passlib 미사용 — bcrypt 4.x 호환 이슈) |
+| 테스트 | pytest + 인메모리 SQLite | 132개 |
 | 설정 | python-dotenv | `.env` 환경 변수 로드 |
 
 > 의존성은 [uv](https://docs.astral.sh/uv/)로 관리합니다. 직접 의존성은 `pyproject.toml`, 전체 버전 고정은 `uv.lock`에 기록됩니다.
+>
+> **임베딩 전환 주의**: 과거에는 sentence-transformers(`distiluse-base-multilingual-cased-v1`, 384/512차원)를 썼습니다. OpenAI 임베딩(1536차원)으로 바꾸면서 컬렉션이 호환되지 않아 새 컬렉션 `react-docs-openai`를 만들었습니다. 구 컬렉션 `react-docs-complete`는 롤백 대비로 Qdrant에 남아 있습니다.
 
 ## 2. 디렉토리 구조
 
@@ -27,28 +35,40 @@ learnsphere-api/
 ├── app/                          # 메인 FastAPI 애플리케이션 패키지
 │   ├── main.py                   # 앱 진입점 (라우터 등록, CORS, 웹훅)
 │   ├── api/
-│   │   ├── lesson_api.py         # 레슨 조회 API (학습자용, ID 기반)
-│   │   └── admin_api.py          # 콘텐츠 생성·세대/버전 관리 API (관리자용, API 키 인증)
+│   │   ├── lesson_api.py         # 레슨 조회 API (공개, ID 기반)
+│   │   ├── admin_api.py          # 콘텐츠 생성·세대/버전 관리 API (관리자 키 인증)
+│   │   ├── auth_api.py           # 학습자 가입·로그인·내 정보 (공개)
+│   │   └── chat_api.py           # 튜터 챗 세션/메시지/SSE 스트림 (JWT 인증)
+│   ├── agents/
+│   │   └── tutor_agent.py        # LangGraph RAG 튜터 (retrieve → generate)
 │   ├── core/
-│   │   ├── database.py           # SQLAlchemy 엔진/세션/Base 설정
-│   │   └── security.py           # 관리자 API 키 인증 의존성
+│   │   ├── database.py           # SQLAlchemy 엔진/세션/Base + session_scope
+│   │   ├── security.py           # 관리자 API 키 인증 의존성
+│   │   ├── auth.py               # 학습자 인증 (bcrypt 해시 + JWT + get_current_user)
+│   │   └── taxonomy.py           # 레벨 ↔ sub_category 매핑
 │   ├── crud/
 │   │   ├── crud_content.py       # 콘텐츠 메타데이터 조회 쿼리
-│   │   └── crud_lessons.py       # 레슨 세대/버전 CRUD (원자 전환·복원·activate)
+│   │   ├── crud_lessons.py       # 레슨 세대/버전 CRUD (원자 전환·복원·activate)
+│   │   ├── crud_users.py         # 유저 조회·생성
+│   │   └── crud_chat.py          # 대화 세션·메시지 (소유권 확인 포함)
 │   ├── models/
-│   │   └── models.py             # SQLAlchemy ORM 모델 (6개 테이블)
+│   │   └── models.py             # SQLAlchemy ORM 모델 (8개 테이블)
 │   ├── schemas/
-│   │   └── schemas.py            # Pydantic 스키마 (레슨 본문 검증 포함)
+│   │   ├── schemas.py            # 레슨 스키마 (본문 검증 포함)
+│   │   ├── auth.py               # 가입·로그인·토큰·유저 응답
+│   │   └── chat.py               # 세션·메시지·챗 응답
 │   ├── services/
 │   │   ├── content_pipeline_service.py  # 콘텐츠 생성 파이프라인 (DB 세대 단위)
 │   │   ├── openai_service.py            # OpenAI 호출 (레슨 생성 + 스키마 검증)
-│   │   └── qdrant_service.py            # Qdrant 컨텍스트 검색
+│   │   ├── embedding_service.py         # OpenAI 임베딩 (토큰 계산·배치 분할)
+│   │   └── qdrant_service.py            # Qdrant 검색 (레벨 전량 scroll + 유사도 search)
 │   └── scripts/
 │       ├── seed.py                          # PostgreSQL 초기 데이터 주입
 │       ├── import_lessons_from_files.py     # (일회성) 레슨 JSON 파일 → DB 이관
 │       └── enrichment/                      # 가공 파이프라인 (별도 문서 참고)
-├── alembic/                      # DB 스키마 마이그레이션 (versions/0001, 0002)
-├── tests/                        # pytest (가공 파이프라인 + 레슨 DB 60개)
+├── alembic/                      # DB 스키마 마이그레이션 (versions/0001~0004)
+├── tests/                        # pytest 132개
+├── CODE_GUIDE.md                 # 코드 학습 가이드 (설계 의도 중심)
 ├── index_data.py                 # React 문서 → Qdrant 인덱싱 스크립트 (독립 실행)
 ├── validated_json_server.py      # 검증된 레슨 전용 별도 서버 (포트 8001, 독립 실행)
 ├── react_docs_data.json          # React 문서 원본 데이터
@@ -65,7 +85,7 @@ learnsphere-api/
 
 ```mermaid
 flowchart TD
-    A[react_complete_learning_data.json<br/>React 문서 원본] -->|index_data.py<br/>청킹 + 임베딩| B[(Qdrant<br/>벡터 DB)]
+    A[react_complete_learning_data.json<br/>React 문서 원본] -->|index_data.py<br/>청킹 + OpenAI 임베딩| B[(Qdrant<br/>react-docs-openai)]
     A -->|scripts/seed.py| C[(PostgreSQL<br/>subjects / learning_content)]
 
     D[관리자: POST /admin/generate-all-content<br/>또는 웹훅 /webhooks/content-updated] -->|세대 생성 + BackgroundTasks| E[content_pipeline_service]
@@ -76,13 +96,60 @@ flowchart TD
 
     G -->|GET /lessons, /lessons/id| I[프론트엔드<br/>localhost:5173 / 3000]
     C -->|GET /contents/과목명| I
+
+    I -->|POST /chat/sessions/id/stream<br/>Bearer JWT| J[tutor_agent<br/>LangGraph]
+    B -->|질문 임베딩 유사도 top-4<br/>search_similar| J
+    G -.->|세션에 lesson_id가 있으면<br/>레슨 본문 주입| J
+    J -->|SSE 토큰 스트림| I
+    J -->|질문·답변 저장| K[(chat_sessions /<br/>chat_messages)]
 ```
+
+> 같은 Qdrant 컬렉션을 두 축이 다른 방식으로 씁니다 — 생성은 `scroll`(레벨 전량), 챗은 `query_points`(유사도 top-k).
 
 1. **인덱싱(사전 준비)**: `index_data.py`가 React 문서를 `##` 소제목 단위로 청킹하고 임베딩하여 Qdrant에 업로드. `seed.py`가 같은 데이터의 메타데이터를 PostgreSQL에 주입.
 2. **생성(관리자 트리거)**: 관리자 API 또는 웹훅 호출 → `lesson_generations`에 세대(running) 생성 → 백그라운드 파이프라인이 레벨(초급/중급/고급)별로 Qdrant에서 토픽·컨텍스트 수집 → 토픽마다 OpenAI로 레슨 JSON 생성·검증 → `lesson_versions`에 **비활성(is_current=False) 버전으로 적재** → 전 레벨 완료 시 `finalize_generation`이 단일 트랜잭션으로 활성 전환. 진행 중에도 사용자는 이전 세대를 그대로 조회하며, 실패 토픽은 이전 버전 유지 + `failed_topics` 기록(부분 성공 허용).
 3. **제공(학습자)**: 프론트엔드가 `GET /lessons`로 레벨별 목차를 받고 `GET /lessons/{id}`로 활성 버전 본문을 조회.
+4. **대화(학습자)**: 로그인 후 `POST /chat/sessions`로 세션을 만들고 `.../stream`으로 질문 → 서버가 DB에서 이력을 로드하고 Qdrant에서 근거 문서를 검색해 LangGraph 튜터가 답변을 토큰 단위로 스트리밍 → 질문·답변이 `chat_messages`에 저장. 세션에 `lesson_id`가 있으면 해당 레슨 본문이 검색 문서보다 앞선 근거로 주입됨.
 
 ## 4. 데이터베이스 모델 (`app/models/models.py`)
+
+테이블 8개가 세 무리로 나뉩니다.
+
+| 무리 | 테이블 |
+|---|---|
+| 레슨 콘텐츠 | `lesson_generations`, `lessons`, `lesson_versions` |
+| 유저·대화 | `users`, `chat_sessions`, `chat_messages` |
+| 메타데이터/유산 | `subjects`, `learning_content`, `lesson_backups`(DEPRECATED) |
+
+### users — 학습자 계정
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | Integer PK | |
+| email | String(255), unique, index, not null | 로그인 ID |
+| password_hash | String(255), not null | bcrypt 해시 |
+| nickname | String(50), not null | 헤더 표시명 |
+| created_at | DateTime | |
+
+> `role` 컬럼이 없습니다. 관리자는 계정이 아니라 공유 API 키 체계(`X-Admin-API-Key`)를 쓰므로 두 인증은 별개 경로입니다.
+
+### chat_sessions — 튜터와의 대화 한 묶음
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | Integer PK | |
+| user_id | FK → users, index, not null | 소유자 |
+| title | String(255), nullable | 첫 질문 앞 40자로 자동 생성 |
+| lesson_id | FK → lessons, nullable | 있으면 레슨 사이드패널에서 시작된 대화 |
+| created_at / updated_at | DateTime | `updated_at`은 onupdate |
+
+### chat_messages — 대화 한 줄
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | Integer PK | |
+| session_id | FK → chat_sessions, index, not null | `cascade="all, delete-orphan"` |
+| role | String(20) | `user` / `assistant` |
+| content | Text, not null | |
+| sources | JSON, nullable | 답변 근거 문서 제목 (assistant만) |
+| created_at | DateTime | |
 
 ### subjects — 학습 과목
 | 컬럼 | 타입 | 설명 |
@@ -139,6 +206,13 @@ flowchart TD
 
 스키마는 **alembic**으로 관리합니다 — 서버 기동 전 `uv run alembic upgrade head` (기존 create_all 시절 DB는 최초 1회 `alembic stamp 0001` 후 upgrade).
 
+| 리비전 | 내용 |
+|---|---|
+| 0001 | baseline (subjects, learning_content, lesson_backups) |
+| 0002 | 레슨 콘텐츠 테이블 (lesson_generations, lessons, lesson_versions) |
+| 0003 | users |
+| 0004 | chat_sessions, chat_messages |
+
 ## 5. API 엔드포인트
 
 메인 앱(`app.main:app`, 기본 포트 8000). 라우터 prefix는 `/api/v1`.
@@ -160,6 +234,42 @@ flowchart TD
 | GET | `/api/v1/lessons` | 활성 레슨 목록을 레벨별 그룹으로 반환: `{"초급": [{id, title, number}], ...}` (archived 제외) |
 | GET | `/api/v1/lessons/{lesson_id}` | 레슨의 활성 버전 본문. 응답 모델: `LessonDetail` (id, level, title, core_concepts, code_examples, quizzes, version_id, updated_at). 없거나 archived면 404 |
 
+### Auth (학습자 인증) — `auth_api.py`
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/api/v1/auth/signup` | `{email, password, nickname}` → `{access_token, token_type}`. 이메일 중복 409, 형식 오류 422 |
+| POST | `/api/v1/auth/login` | `{email, password}` → `{access_token, token_type}`. 자격증명 불일치 401 |
+| GET | `/api/v1/auth/me` | Bearer 토큰으로 내 정보 조회. 토큰 없음/만료/위조 시 401 |
+
+> 토큰은 HS256, 기본 유효기간 7일(`JWT_EXPIRE_MINUTES`). `JWT_SECRET_KEY` 미설정 시 503.
+
+### Chat (튜터 챗) — `chat_api.py`
+
+> 이 라우터 전체가 `Authorization: Bearer <JWT>`를 요구합니다. 남의 세션 접근은 **403**.
+> 대화 이력은 요청 본문이 아니라 **DB에서 로드**하므로, 클라이언트가 과거 대화를 들고 다니지 않습니다.
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/api/v1/chat/sessions` | Body: `{lesson_id?}`. 세션 생성 → `SessionOut`. 없는 레슨이면 404 |
+| GET | `/api/v1/chat/sessions` | 본인 세션 목록 (최근 갱신순) |
+| GET | `/api/v1/chat/sessions/{id}/messages` | 세션의 메시지 목록 |
+| DELETE | `/api/v1/chat/sessions/{id}` | 세션 삭제 (메시지 cascade) → 204 |
+| POST | `/api/v1/chat/sessions/{id}/messages` | 질문 전송 → `{answer, sources}`. 빈 메시지 422, 생성 실패 502 |
+| POST | `/api/v1/chat/sessions/{id}/stream` | 질문 전송 (SSE). `text/event-stream` |
+
+**SSE 이벤트 3종** (`POST .../stream`):
+
+```
+data: {"type":"token","content":"..."}     답변 조각 (N회)
+data: {"type":"done","sources":[...]}      정상 종료
+data: {"type":"error","detail":"..."}      생성 실패 (연결은 정상 종료)
+```
+
+- 사용자 메시지는 **스트림 시작 전**에 저장됩니다 (클라이언트가 즉시 끊어도 질문은 남음).
+- 답변은 제너레이터 `finally`에서 저장되므로, **중도 이탈해도 받은 만큼 저장**됩니다.
+- 비스트리밍 `POST .../messages`는 폴백으로 유지됩니다.
+
 ### Admin (관리자용) — `admin_api.py`
 
 > Admin 전체와 Webhook 엔드포인트는 `X-Admin-API-Key` 헤더 인증이 필요합니다 (환경 변수 `ADMIN_API_KEY`와 비교, 미설정 시 503).
@@ -178,12 +288,19 @@ flowchart TD
 |---|---|---|
 | POST | `/api/v1/webhooks/content-updated` | Qdrant 데이터 변경 등 이벤트 수신 → 전체 콘텐츠 재생성 파이프라인을 백그라운드로 실행 (현재는 admin 생성 API와 동일 동작) |
 
-> 학습자용 엔드포인트(Lesson, Contents)는 인증 없이 공개되어 있습니다.
+> 레슨 조회(Lesson, Contents)와 가입·로그인은 인증 없이 공개되어 있습니다. 튜터 챗만 로그인이 필요합니다.
+
+### 인증 체계 요약
+
+| 체계 | 헤더 | 적용 대상 | 미설정 시 |
+|---|---|---|---|
+| 관리자 | `X-Admin-API-Key` | `/admin/*`, `/webhooks/*` | 503 (`ADMIN_API_KEY` 없음) |
+| 학습자 | `Authorization: Bearer` | `/chat/*`, `/auth/me` | 503 (`JWT_SECRET_KEY` 없음) |
 
 ## 6. 콘텐츠 생성 파이프라인 상세 (`services/`)
 
 ### 6.1 `qdrant_service.get_contexts_by_level(level)`
-- 컬렉션(`QDRANT_COLLECTION`, 기본값 `react-docs-complete`)에서 `sub_category` 서버 사이드 필터 + 페이지네이션 **scroll**로 해당 레벨 문서만 전량 조회 (벡터 검색 아님).
+- 컬렉션(`QDRANT_COLLECTION`, 코드 기본값 `react-docs-complete` — **`.env`에서 `react-docs-openai`로 지정**)에서 `sub_category` 서버 사이드 필터 + 페이지네이션 **scroll**로 해당 레벨 문서만 전량 조회 (벡터 검색 아님).
 - 레벨 → `sub_category` 매핑:
   - 초급: `"1단계: 사전 준비 ⚙️"`, `"2단계: 메인 학습 코스 (초급) 入门"`
   - 중급: `"3단계: 메인 학습 코스 (중급) 🚀"`
@@ -204,11 +321,55 @@ flowchart TD
   2. `lessons` upsert (키: level + slug) → `lesson_versions`에 **is_current=False**로 적재 + 레슨 단위 커밋
 - `finalize_generation()` (crud_lessons): 단일 트랜잭션으로 새 버전 활성 전환, 세대에 없는 레슨 archived 처리, 실패 토픽 레슨은 이전 버전 유지, 세대 통계 기록.
 
+## 6.5 튜터 챗 (RAG) 상세
+
+### 6.5.1 `embedding_service`
+- 모델 `text-embedding-3-small`(1536차원). 인덱싱(`index_data.py`)과 검색(`search_similar`)이 공유합니다.
+- **입력당 8000토큰** 상한(API 한도 8192에서 여유). 넘으면 `split_text_by_tokens()`로 문단 경계 우선 분할.
+- **요청당 100개 / 250,000토큰** 상한으로 배치 분할. 개수만 제한하면 긴 청크가 몰릴 때 요청 토큰 한도에 걸리기 때문입니다.
+- 클라이언트·인코딩 모두 지연 생성 — import 시점에 API 키를 요구하지 않습니다.
+
+### 6.5.2 `qdrant_service.search_similar(query, top_k, level)`
+- 질문을 임베딩해 `query_points()`로 유사도 검색. `get_contexts_by_level`의 scroll 방식과 목적이 다릅니다.
+- 반환 `[{text, title, source, score}]` (점수 내림차순).
+- **검색 실패를 삼킵니다** — 예외를 빈 리스트로 축약해 Qdrant가 죽어도 챗은 일반 지식으로 답합니다. (레슨 생성 쪽이 실패를 예외로 올리는 것과 대비)
+
+### 6.5.3 `agents/tutor_agent.py` — LangGraph 그래프
+```
+START → retrieve → generate → END
+```
+- **State**: `question`, `history`, `lesson_context`, `retrieved`, `answer` (TypedDict)
+- **retrieve**: `search_similar(question, top_k=4)` → `retrieved`
+- **generate**: 시스템 프롬프트 + 참고 문서 + 최근 대화 + 질문 → `ChatOpenAI` 호출
+- **checkpointer 미사용** — 이력은 DB가 주인이고 호출자가 주입합니다.
+- 프롬프트 조립 순서: **레슨 본문 → 검색 문서** (학습자가 보는 레슨이 우선 근거)
+- 이력은 `MAX_HISTORY_TURNS = 10`으로 절단 (토큰 비용·지연 억제)
+- 실패는 `TutorError`로 감싸 API 레이어가 502(비스트리밍) 또는 `error` 이벤트(스트리밍)로 변환
+
+**진입점 2개**
+| 함수 | 형태 | 쓰는 곳 |
+|---|---|---|
+| `run_tutor(...)` | 동기, `(answer, sources)` 반환 | `POST .../messages` |
+| `astream_tutor(...)` | async generator, `{"type":"token"\|"sources"}` yield | `POST .../stream` |
+
+> LangGraph의 이벤트 이름·구조는 버전에 따라 바뀝니다. `astream_events(version="v2")` 의존을 `astream_tutor` **한 함수에 격리**해, 라이브러리가 바뀌어도 API 레이어는 손대지 않도록 했습니다.
+
+### 6.5.4 DB 세션 수명 주의
+`Depends(get_db)`가 준 세션은 응답 본문이 끝나기 전에 닫힐 수 있습니다. 요청보다 오래 사는 작업은 세션을 따로 얻습니다.
+
+| 방법 | 언제 |
+|---|---|
+| `Depends(get_db)` | 보통의 요청 |
+| `SessionLocal()` 직접 | BackgroundTask (파이프라인) |
+| `session_scope()` (의존성 `get_session_scope`) | 스트리밍 응답 제너레이터 |
+
+`session_scope`를 의존성으로 노출한 이유는 테스트에서 갈아끼우기 위해서입니다 (`tests/conftest.py`).
+
 ## 7. 독립 실행 스크립트
 
 | 파일 | 실행 위치 | 역할 |
 |---|---|---|
-| `index_data.py` | 루트 | `react_complete_learning_data.json`을 `##` 단위로 청킹, 메타데이터를 텍스트에 포함해 임베딩 후 Qdrant 컬렉션(`QDRANT_COLLECTION`, 기본값 `react-docs-complete`)에 업로드(recreate — **기존 컬렉션 삭제 후 재생성**) |
+| `index_data.py` | 루트 | `react_complete_learning_data.json`을 `##` 단위로 청킹, 메타데이터를 텍스트에 포함해 **OpenAI 임베딩**(1536차원) 후 Qdrant 컬렉션(`QDRANT_COLLECTION`)에 업로드. `recreate_collection` — **해당 컬렉션 삭제 후 재생성**이므로 컬렉션 이름을 반드시 확인할 것. OpenAI 비용 발생 |
 | `app/scripts/seed.py` | 루트에서 모듈 실행 | 'React' Subject 생성 + 학습 콘텐츠 메타데이터를 PostgreSQL에 주입 (`source_path` 기준 중복 방지) |
 | `app/scripts/import_lessons_from_files.py` | 루트에서 모듈 실행 | (일회성) 구 `generated_content/` 레슨 JSON을 DB(lessons/lesson_versions)로 이관. `--content-dir` 필수, all-or-nothing, 비어있지 않으면 `--force` 필요 — 2026-07-24 48개 이관 완료 |
 | `validated_json_server.py` | 루트 | **별도 서버(포트 8001)**. `validated_lessons_json/` 폴더의 검증된 레슨을 5분 인메모리 캐시와 함께 제공. 메인 앱과 무관하게 단독 실행 (`python validated_json_server.py`) |
@@ -221,12 +382,19 @@ flowchart TD
 
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/learnsphere_db
-QDRANT_URL=http://localhost:6333
+QDRANT_URL=http://localhost:6333        # 또는 Qdrant Cloud URL
 QDRANT_API_KEY=your-qdrant-api-key
-QDRANT_COLLECTION=react-docs-complete   # 인덱싱·파이프라인 공용 컬렉션 이름 (선택, 기본값 동일)
+QDRANT_COLLECTION=react-docs-openai     # 인덱싱·파이프라인·챗 공용 컬렉션 (OpenAI 임베딩 1536차원)
 OPENAI_API_KEY=your-openai-api-key
+CHAT_MODEL=gpt-4o-mini                  # 튜터 챗 모델 (선택, 기본값 동일)
+EMBEDDING_MODEL=text-embedding-3-small  # 인덱싱·검색 공용 (선택, 기본값 동일)
 ADMIN_API_KEY=your-admin-api-key        # 관리자 API/웹훅 인증 키 (필수 — 미설정 시 관리자 기능 503)
+JWT_SECRET_KEY=...                      # 학습자 로그인 서명 키. HS256이므로 32바이트 이상
+                                        # (필수 — 미설정 시 챗/인증 503)
+JWT_EXPIRE_MINUTES=10080                # 토큰 유효기간(분). 선택, 기본 7일
 ```
+
+> `JWT_SECRET_KEY` 생성: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 실행 순서:
 
@@ -283,6 +451,16 @@ docker compose down -v      # 중지 + 데이터 볼륨 삭제
 - 기본값(`user`/`password`)은 로컬 개발 전용입니다. 운영 환경에서는 `.env`에서 반드시 강한 값으로 교체하세요.
 
 ## 9. 이슈 수정 이력 및 잔여 개선 포인트
+
+### 추가 완료 (2026-07-27) — AI 튜터 챗봇 (Phase 1~12 / M1)
+
+- **학습자 인증 도입**: `users` 테이블 + bcrypt 해시 + JWT(HS256). 관리자 키 체계와 별개 경로로 공존 (`core/auth.py`, alembic 0003).
+- **RAG 튜터**: LangGraph 2노드 그래프(retrieve → generate). 우리 React 문서를 근거로 답하고 출처를 표시. 레슨 사이드패널에서는 해당 레슨 본문을 우선 근거로 주입.
+- **임베딩 전환**: sentence-transformers → OpenAI `text-embedding-3-small`. 서빙 프로세스가 수백 MB 모델을 로드하던 부담 제거. 신규 컬렉션 `react-docs-openai`(1536차원, 862포인트) 생성, 구 컬렉션은 롤백 대비 보존.
+- **대화 영속화**: `chat_sessions` / `chat_messages` (alembic 0004). 이력을 요청 본문이 아닌 **DB에서 로드**해 주입.
+- **SSE 스트리밍**: `POST /chat/sessions/{id}/stream`. 사용자 메시지는 스트림 시작 전 저장, 답변은 `finally`에서 저장해 **중도 이탈에도 보존**.
+- **세션 수명 분리**: `core/database.py`에 `session_scope()` / `get_session_scope()` 추가 — 스트리밍 응답이 요청 세션보다 오래 사는 문제 해결.
+- **테스트 확대**: 60개 → **132개** (챗 26, 튜터 에이전트 12, 인증 9, 임베딩·검색 등).
 
 ### 수정 완료 (2026-07-24) — 레슨 저장소 DB 이관
 
