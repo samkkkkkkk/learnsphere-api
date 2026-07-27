@@ -12,12 +12,14 @@ os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 # HS256은 32바이트 이상을 권장한다 (미만이면 PyJWT가 경고)
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret-key-for-pytest-0123456789")
 
+from contextlib import contextmanager
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base, get_db
+from app.core.database import Base, get_db, get_session_scope
 from app.models import models  # noqa: F401 — Base.metadata에 테이블 등록
 
 
@@ -53,10 +55,17 @@ def client(db_session):
     def _override_get_db():
         yield db_session
 
+    @contextmanager
+    def _test_scope():
+        # 스트리밍 응답이 여는 별도 세션도 테스트 DB를 보게 한다 (닫지는 않는다)
+        yield db_session
+
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_session_scope] = lambda: _test_scope
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.pop(get_db, None)
+    app.dependency_overrides.pop(get_session_scope, None)
 
 
 @pytest.fixture()

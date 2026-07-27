@@ -1,9 +1,13 @@
 # tests/test_chat_api.py
 """챗 API 테스트.
 
-에이전트 호출은 tutor_agent.run_tutor를 monkeypatch해 대체한다.
+에이전트 호출은 tutor_agent.run_tutor / astream_tutor를 monkeypatch해 대체한다.
 (app.main import 자체가 무거우므로 client fixture의 지연 import 패턴을 그대로 따른다.)
 """
+import asyncio
+import json
+from contextlib import contextmanager
+
 import pytest
 
 from app.agents import tutor_agent
@@ -203,3 +207,171 @@ def test_plain_session_has_no_lesson_context(client, auth_headers, session_id,
     send(client, auth_headers, session_id, "안녕")
 
     assert fake_tutor[0]["lesson_context"] is None
+
+
+# --- 스트리밍 (Phase 11) ---
+
+TOKENS = ["use", "State", "는 상태 훅입니다."]
+
+
+@pytest.fixture()
+def fake_stream(monkeypatch):
+    """astream_tutor()를 가짜 async generator로 대체하고 호출 인자를 기록한다."""
+    calls = []
+
+    async def _fake_astream(question, history=(), lesson_context=None):
+        calls.append({
+            "question": question,
+            "history": list(history),
+            "lesson_context": lesson_context,
+        })
+        for token in TOKENS:
+            yield {"type": "token", "content": token}
+        yield {"type": "sources", "sources": ["State"]}
+
+    monkeypatch.setattr(tutor_agent, "astream_tutor", _fake_astream)
+    return calls
+
+
+def stream(client, headers, session_id, message="useState가 뭐야?"):
+    return client.stream("POST", f"/api/v1/chat/sessions/{session_id}/stream",
+                         json={"message": message}, headers=headers)
+
+
+def read_events(response):
+    """SSE 본문에서 data 페이로드만 순서대로 뽑는다."""
+    return [json.loads(line[len("data: "):])
+            for line in response.iter_lines() if line.startswith("data: ")]
+
+
+def stored_messages(client, headers, session_id):
+    return client.get(f"/api/v1/chat/sessions/{session_id}/messages",
+                      headers=headers).json()
+
+
+def test_stream_yields_multiple_token_events(client, auth_headers, session_id,
+                                             fake_stream):
+    with stream(client, auth_headers, session_id) as response:
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        tokens = [e for e in read_events(response) if e["type"] == "token"]
+
+    assert [e["content"] for e in tokens] == TOKENS
+
+
+def test_stream_ends_with_done_event(client, auth_headers, session_id, fake_stream):
+    with stream(client, auth_headers, session_id) as response:
+        events = read_events(response)
+
+    assert events[-1] == {"type": "done", "sources": ["State"]}
+
+
+def test_stream_saves_user_message_before_streaming(client, auth_headers, session_id,
+                                                   fake_stream):
+    """본문을 한 줄도 읽지 않고 끊어도 질문은 남아 있다."""
+    with stream(client, auth_headers, session_id, "질문만 남기고 이탈"):
+        pass
+
+    messages = stored_messages(client, auth_headers, session_id)
+    assert messages[0]["role"] == "user"
+    assert messages[0]["content"] == "질문만 남기고 이탈"
+
+
+def test_stream_saves_assistant_message_on_completion(client, auth_headers, session_id,
+                                                      fake_stream):
+    with stream(client, auth_headers, session_id) as response:
+        read_events(response)
+
+    messages = stored_messages(client, auth_headers, session_id)
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+    assert messages[1]["content"] == "".join(TOKENS)
+    assert messages[1]["sources"] == ["State"]
+
+
+def test_stream_saves_partial_on_early_close(client, db_session, auth_user,
+                                             auth_headers, session_id, fake_stream):
+    """중간에 끊어도 그때까지 받은 답변은 저장된다.
+
+    TestClient는 스트리밍 응답을 끝까지 소비해버려 '중도 이탈'을 흉내 낼 수 없다.
+    그래서 응답 제너레이터(`answer_stream`)를 직접 만들어 첫 토큰만 받고 닫는다.
+    """
+    from app.api import chat_api
+
+    @contextmanager
+    def _scope():
+        yield db_session
+
+    async def consume_first_token_then_close():
+        stream_gen = chat_api.answer_stream(
+            "useState가 뭐야?", [], None, session_id, auth_user.id, _scope)
+        first = await stream_gen.__anext__()
+        await stream_gen.aclose()  # 클라이언트가 창을 닫은 상황
+        return first
+
+    first = asyncio.run(consume_first_token_then_close())
+
+    assert json.loads(first[len("data: "):])["content"] == TOKENS[0]
+
+    assistant = [m for m in stored_messages(client, auth_headers, session_id)
+                 if m["role"] == "assistant"]
+    assert len(assistant) == 1
+    assert assistant[0]["content"] == TOKENS[0]  # 첫 토큰까지만
+    assert assistant[0]["sources"] is None  # 출처는 아직 못 받았다
+
+
+def test_stream_loads_history_and_lesson_context(client, db_session, auth_headers,
+                                                 fake_stream):
+    """비스트리밍 경로와 같은 재료(이력·레슨 본문)를 받는다."""
+    lesson = seed_lesson(db_session)
+    created = client.post("/api/v1/chat/sessions", json={"lesson_id": lesson.id},
+                          headers=auth_headers).json()
+
+    with stream(client, auth_headers, created["id"], "첫 질문") as response:
+        read_events(response)
+    with stream(client, auth_headers, created["id"], "두 번째 질문") as response:
+        read_events(response)
+
+    second = fake_stream[1]
+    assert [turn.content for turn in second["history"]] == ["첫 질문", "".join(TOKENS)]
+    assert "조건에 따라 다른 JSX를 반환합니다." in second["lesson_context"]
+
+
+def test_stream_sends_error_event_when_agent_fails(client, monkeypatch, auth_headers,
+                                                   session_id):
+    """실패해도 연결은 정상 종료되고, 내부 오류 상세는 새지 않는다."""
+    async def _boom(question, history=(), lesson_context=None):
+        raise tutor_agent.TutorError("openai 연결 실패: 상세 내부 정보")
+        yield  # pragma: no cover — async generator로 만들기 위한 장식
+
+    monkeypatch.setattr(tutor_agent, "astream_tutor", _boom)
+
+    with stream(client, auth_headers, session_id) as response:
+        events = read_events(response)
+
+    assert events[-1]["type"] == "error"
+    assert "openai" not in events[-1]["detail"]
+
+
+@pytest.mark.parametrize("message", ["", "   "])
+def test_stream_rejects_empty_message(client, auth_headers, session_id, fake_stream,
+                                      message):
+    with stream(client, auth_headers, session_id, message) as response:
+        assert response.status_code == 422
+    assert fake_stream == []
+
+
+def test_stream_requires_authentication(client, session_id):
+    with client.stream("POST", f"/api/v1/chat/sessions/{session_id}/stream",
+                       json={"message": "안녕"}) as response:
+        assert response.status_code == 401
+
+
+def test_stream_other_users_session_returns_403(client, db_session, session_id,
+                                                fake_stream):
+    other = crud_users.create_user(
+        db_session, email="other@example.com", password="password123",
+        nickname="다른사람")
+    other_headers = {"Authorization": f"Bearer {create_access_token(other.id)}"}
+
+    with stream(client, other_headers, session_id) as response:
+        assert response.status_code == 403

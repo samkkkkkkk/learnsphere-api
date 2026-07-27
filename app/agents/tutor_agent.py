@@ -7,7 +7,7 @@ retrieve → generate 2노드 선형 그래프. 검색된 React 문서를 근거
 주인이 되므로, 그래프가 별도 저장소를 갖지 않는 편이 단순하다.
 """
 import os
-from typing import Dict, List, Optional, Sequence, Tuple, TypedDict
+from typing import AsyncIterator, Dict, List, Optional, Sequence, Tuple, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -132,19 +132,64 @@ def _get_graph():
     return _graph
 
 
-def run_tutor(question: str, history: Sequence[ChatTurn] = (),
-              lesson_context: Optional[str] = None) -> Tuple[str, List[str]]:
-    """질문에 대한 답변과 근거 문서 제목 목록을 반환한다."""
-    result = _get_graph().invoke({
-        "question": question,
-        "history": list(history),
-        "lesson_context": lesson_context,
-    })
-
-    sources = []
-    for doc in result.get("retrieved") or []:
+def _extract_sources(retrieved: Optional[Sequence[Dict]]) -> List[str]:
+    """검색 결과에서 중복 없는 문서 제목 목록을 뽑는다."""
+    sources: List[str] = []
+    for doc in retrieved or []:
         title = doc.get("title")
         if title and title not in sources:
             sources.append(title)
+    return sources
 
-    return result["answer"], sources
+
+def _graph_input(question: str, history: Sequence[ChatTurn],
+                 lesson_context: Optional[str]) -> TutorState:
+    return {
+        "question": question,
+        "history": list(history),
+        "lesson_context": lesson_context,
+    }
+
+
+def run_tutor(question: str, history: Sequence[ChatTurn] = (),
+              lesson_context: Optional[str] = None) -> Tuple[str, List[str]]:
+    """질문에 대한 답변과 근거 문서 제목 목록을 반환한다."""
+    result = _get_graph().invoke(_graph_input(question, history, lesson_context))
+
+    return result["answer"], _extract_sources(result.get("retrieved"))
+
+
+async def astream_tutor(question: str, history: Sequence[ChatTurn] = (),
+                        lesson_context: Optional[str] = None
+                        ) -> AsyncIterator[Dict]:
+    """답변을 토큰 단위로 흘리고, 마지막에 근거 문서 목록을 낸다.
+
+    yield 하는 값은 두 종류뿐이다.
+      - `{"type": "token", "content": "..."}` — 답변 조각 (도착 순서대로)
+      - `{"type": "sources", "sources": [...]}` — 스트림 끝. 정확히 한 번, 마지막에.
+
+    LangGraph의 이벤트 이름·구조는 버전에 따라 바뀌므로, 그 의존을 이 함수 하나에
+    가둔다. 호출부는 위 두 형태만 알면 된다.
+    """
+    retrieved: List[Dict] = []
+
+    try:
+        async for event in _get_graph().astream_events(
+                _graph_input(question, history, lesson_context), version="v2"):
+            kind = event.get("event")
+
+            if kind == "on_chat_model_stream":
+                chunk = event.get("data", {}).get("chunk")
+                content = getattr(chunk, "content", "") or ""
+                if content:
+                    yield {"type": "token", "content": content}
+
+            elif kind == "on_chain_end":
+                # retrieve 노드(그리고 그래프 전체)의 출력에 검색 결과가 실려 온다.
+                output = event.get("data", {}).get("output")
+                if isinstance(output, dict) and output.get("retrieved"):
+                    retrieved = output["retrieved"]
+    except Exception as e:
+        raise TutorError(f"LLM 스트리밍 중 오류: {e}") from e
+
+    yield {"type": "sources", "sources": _extract_sources(retrieved)}

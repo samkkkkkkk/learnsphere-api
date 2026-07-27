@@ -3,6 +3,8 @@
 
 Qdrant 검색과 LLM 호출을 모두 monkeypatch해 그래프 자체의 동작만 검증한다.
 """
+import asyncio
+
 import pytest
 
 from app.agents import tutor_agent
@@ -145,6 +147,74 @@ def test_history_role_mapping():
     assert isinstance(messages[1], HumanMessage)
     assert isinstance(messages[2], AIMessage)
     assert isinstance(messages[3], HumanMessage)
+
+
+# --- 스트리밍 (Phase 11) ---
+
+class _FakeChunk:
+    def __init__(self, content):
+        self.content = content
+
+
+def fake_graph_events(events):
+    """astream_events가 주어진 이벤트를 순서대로 내는 가짜 그래프."""
+    class _FakeGraph:
+        async def astream_events(self, _input, version=None):
+            for event in events:
+                yield event
+
+    return _FakeGraph()
+
+
+async def collect(agen):
+    return [item async for item in agen]
+
+
+def test_astream_yields_tokens_then_sources(monkeypatch):
+    """토큰만 골라 흘리고, 마지막에 검색 문서 제목을 낸다."""
+    monkeypatch.setattr(tutor_agent, "_get_graph", lambda: fake_graph_events([
+        {"event": "on_chain_start", "data": {}},
+        {"event": "on_chain_end", "name": "retrieve",
+         "data": {"output": {"retrieved": SAMPLE_DOCS}}},
+        {"event": "on_chat_model_stream", "data": {"chunk": _FakeChunk("key는 ")}},
+        {"event": "on_chat_model_stream", "data": {"chunk": _FakeChunk("")}},  # 빈 조각
+        {"event": "on_chat_model_stream", "data": {"chunk": _FakeChunk("식별자입니다.")}},
+        {"event": "on_chain_end", "name": "LangGraph", "data": {"output": {}}},
+    ]))
+
+    events = asyncio.run(collect(tutor_agent.astream_tutor("key가 뭐야?")))
+
+    assert events == [
+        {"type": "token", "content": "key는 "},
+        {"type": "token", "content": "식별자입니다."},
+        # 같은 문서의 두 조각은 제목 하나로 합쳐진다
+        {"type": "sources", "sources": ["리스트와 key", "State"]},
+    ]
+
+
+def test_astream_yields_empty_sources_without_search_hit(monkeypatch):
+    monkeypatch.setattr(tutor_agent, "_get_graph", lambda: fake_graph_events([
+        {"event": "on_chat_model_stream", "data": {"chunk": _FakeChunk("음…")}},
+    ]))
+
+    events = asyncio.run(collect(tutor_agent.astream_tutor("아무거나")))
+
+    assert events[-1] == {"type": "sources", "sources": []}
+
+
+def test_astream_wraps_llm_error(monkeypatch):
+    class _BoomGraph:
+        async def astream_events(self, _input, version=None):
+            yield {"event": "on_chat_model_stream", "data": {"chunk": _FakeChunk("시")}}
+            raise RuntimeError("rate limit")
+
+    monkeypatch.setattr(tutor_agent, "_get_graph", lambda: _BoomGraph())
+
+    async def _run():
+        return await collect(tutor_agent.astream_tutor("질문"))
+
+    with pytest.raises(tutor_agent.TutorError):
+        asyncio.run(_run())
 
 
 def test_tutor_wraps_llm_error(monkeypatch):
