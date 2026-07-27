@@ -1,0 +1,667 @@
+{
+  "src/content/learn/add-react-to-an-existing-project.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/add-react-to-an-existing-project.md",
+    "sub_category": "1단계: 사전 준비 ⚙️",
+    "title": "Add React To An Existing Project",
+    "topic_group": null
+  },
+  "src/content/learn/choosing-the-state-structure.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/choosing-the-state-structure.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Choosing The State Structure",
+    "topic_group": null
+  },
+  "src/content/learn/conditional-rendering.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/conditional-rendering.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Conditional Rendering",
+    "topic_group": null
+  },
+  "src/content/learn/editor-setup.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/editor-setup.md",
+    "sub_category": "1단계: 사전 준비 ⚙️",
+    "title": "Editor Setup",
+    "topic_group": null
+  },
+  "src/content/learn/escape-hatches.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/escape-hatches.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Escape Hatches",
+    "topic_group": null
+  },
+  "src/content/learn/extracting-state-logic-into-a-reducer.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/extracting-state-logic-into-a-reducer.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Extracting State Logic Into A Reducer",
+    "topic_group": null
+  },
+  "src/content/learn/importing-and-exporting-components.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/importing-and-exporting-components.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Importing And Exporting Components",
+    "topic_group": null
+  },
+  "src/content/learn/installation.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/installation.md",
+    "sub_category": "1단계: 사전 준비 ⚙️",
+    "title": "Installation",
+    "topic_group": null
+  },
+  "src/content/learn/javascript-in-jsx-with-curly-braces.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/javascript-in-jsx-with-curly-braces.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Javascript In Jsx With Curly Braces",
+    "topic_group": null
+  },
+  "src/content/learn/keeping-components-pure.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/keeping-components-pure.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Keeping Components Pure",
+    "topic_group": null
+  },
+  "src/content/learn/lifecycle-of-reactive-effects.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/lifecycle-of-reactive-effects.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Lifecycle Of Reactive Effects",
+    "topic_group": null
+  },
+  "src/content/learn/manipulating-the-dom-with-refs.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/manipulating-the-dom-with-refs.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Manipulating The Dom With Refs",
+    "topic_group": null
+  },
+  "src/content/learn/passing-data-deeply-with-context.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/passing-data-deeply-with-context.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Passing Data Deeply With Context",
+    "topic_group": null
+  },
+  "src/content/learn/passing-props-to-a-component.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/passing-props-to-a-component.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Passing Props To A Component",
+    "topic_group": null
+  },
+  "src/content/learn/preserving-and-resetting-state.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/preserving-and-resetting-state.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Preserving And Resetting State",
+    "topic_group": null
+  },
+  "src/content/learn/queueing-a-series-of-state-updates.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/queueing-a-series-of-state-updates.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Queueing A Series Of State Updates",
+    "topic_group": null
+  },
+  "src/content/learn/react-compiler.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/react-compiler.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "React Compiler",
+    "topic_group": null
+  },
+  "src/content/learn/react-developer-tools.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/react-developer-tools.md",
+    "sub_category": "1단계: 사전 준비 ⚙️",
+    "title": "React Developer Tools",
+    "topic_group": null
+  },
+  "src/content/learn/reacting-to-input-with-state.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/reacting-to-input-with-state.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Reacting To Input With State",
+    "topic_group": null
+  },
+  "src/content/learn/referencing-values-with-refs.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/referencing-values-with-refs.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Referencing Values With Refs",
+    "topic_group": null
+  },
+  "src/content/learn/removing-effect-dependencies.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/removing-effect-dependencies.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Removing Effect Dependencies",
+    "topic_group": null
+  },
+  "src/content/learn/render-and-commit.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/render-and-commit.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Render And Commit",
+    "topic_group": null
+  },
+  "src/content/learn/rendering-lists.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/rendering-lists.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Rendering Lists",
+    "topic_group": null
+  },
+  "src/content/learn/responding-to-events.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/responding-to-events.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Responding To Events",
+    "topic_group": null
+  },
+  "src/content/learn/reusing-logic-with-custom-hooks.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/reusing-logic-with-custom-hooks.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Reusing Logic With Custom Hooks",
+    "topic_group": null
+  },
+  "src/content/learn/scaling-up-with-reducer-and-context.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/scaling-up-with-reducer-and-context.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Scaling Up With Reducer And Context",
+    "topic_group": null
+  },
+  "src/content/learn/separating-events-from-effects.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/separating-events-from-effects.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Separating Events From Effects",
+    "topic_group": null
+  },
+  "src/content/learn/sharing-state-between-components.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/sharing-state-between-components.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Sharing State Between Components",
+    "topic_group": null
+  },
+  "src/content/learn/start-a-new-react-project.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/start-a-new-react-project.md",
+    "sub_category": "1단계: 사전 준비 ⚙️",
+    "title": "Start A New React Project",
+    "topic_group": null
+  },
+  "src/content/learn/state-a-components-memory.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/state-a-components-memory.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "State A Components Memory",
+    "topic_group": null
+  },
+  "src/content/learn/state-as-a-snapshot.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/state-as-a-snapshot.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "State As A Snapshot",
+    "topic_group": null
+  },
+  "src/content/learn/synchronizing-with-effects.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/synchronizing-with-effects.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Synchronizing With Effects",
+    "topic_group": null
+  },
+  "src/content/learn/thinking-in-react.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/thinking-in-react.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Thinking In React",
+    "topic_group": null
+  },
+  "src/content/learn/tutorial-tic-tac-toe.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/tutorial-tic-tac-toe.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Tutorial Tic Tac Toe",
+    "topic_group": null
+  },
+  "src/content/learn/typescript.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/typescript.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "Typescript",
+    "topic_group": null
+  },
+  "src/content/learn/understanding-your-ui-as-a-tree.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/understanding-your-ui-as-a-tree.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Understanding Your Ui As A Tree",
+    "topic_group": null
+  },
+  "src/content/learn/updating-arrays-in-state.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/updating-arrays-in-state.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Updating Arrays In State",
+    "topic_group": null
+  },
+  "src/content/learn/updating-objects-in-state.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/updating-objects-in-state.md",
+    "sub_category": "3단계: 메인 학습 코스 (중급) 🚀",
+    "title": "Updating Objects In State",
+    "topic_group": null
+  },
+  "src/content/learn/writing-markup-with-jsx.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/writing-markup-with-jsx.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Writing Markup With Jsx",
+    "topic_group": null
+  },
+  "src/content/learn/you-might-not-need-an-effect.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/you-might-not-need-an-effect.md",
+    "sub_category": "4단계: 심화 탐구 🧠",
+    "title": "You Might Not Need An Effect",
+    "topic_group": null
+  },
+  "src/content/learn/your-first-component.md": {
+    "main_category": "학습 과정 (Learn)",
+    "source_path": "src/content/learn/your-first-component.md",
+    "sub_category": "2단계: 메인 학습 코스 (초급) 入门",
+    "title": "Your First Component",
+    "topic_group": null
+  },
+  "src/content/reference/react-dom/client/createroot.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/client/createroot.md",
+    "sub_category": "React DOM API",
+    "title": "Createroot",
+    "topic_group": "앱 초기화 (Client) 🎬"
+  },
+  "src/content/reference/react-dom/client/hydrateroot.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/client/hydrateroot.md",
+    "sub_category": "React DOM API",
+    "title": "Hydrateroot",
+    "topic_group": "앱 초기화 (Client) 🎬"
+  },
+  "src/content/reference/react-dom/components/common.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/common.md",
+    "sub_category": "React DOM API",
+    "title": "Common",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/components/form.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/form.md",
+    "sub_category": "React DOM API",
+    "title": "Form",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/components/input.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/input.md",
+    "sub_category": "React DOM API",
+    "title": "Input",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/components/link.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/link.md",
+    "sub_category": "React DOM API",
+    "title": "Link",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/components/select.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/select.md",
+    "sub_category": "React DOM API",
+    "title": "Select",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/components/textarea.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/components/textarea.md",
+    "sub_category": "React DOM API",
+    "title": "Textarea",
+    "topic_group": "DOM 컴포넌트 (`react-dom/components`) 🌐"
+  },
+  "src/content/reference/react-dom/createportal.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/createportal.md",
+    "sub_category": "React DOM API",
+    "title": "Createportal",
+    "topic_group": "포털 & 동기화 🔄"
+  },
+  "src/content/reference/react-dom/flushsync.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/flushsync.md",
+    "sub_category": "React DOM API",
+    "title": "Flushsync",
+    "topic_group": "포털 & 동기화 🔄"
+  },
+  "src/content/reference/react-dom/hooks/useformstatus.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/hooks/useformstatus.md",
+    "sub_category": "React DOM API",
+    "title": "Useformstatus",
+    "topic_group": "DOM Hooks (`react-dom/hooks`) 🪝"
+  },
+  "src/content/reference/react-dom/preconnect.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/preconnect.md",
+    "sub_category": "React DOM API",
+    "title": "Preconnect",
+    "topic_group": "리소스 최적화 ⚡"
+  },
+  "src/content/reference/react-dom/preinit.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/preinit.md",
+    "sub_category": "React DOM API",
+    "title": "Preinit",
+    "topic_group": "리소스 최적화 ⚡"
+  },
+  "src/content/reference/react-dom/preload.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/preload.md",
+    "sub_category": "React DOM API",
+    "title": "Preload",
+    "topic_group": "리소스 최적화 ⚡"
+  },
+  "src/content/reference/react-dom/server/rendertopipeablestream.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/server/rendertopipeablestream.md",
+    "sub_category": "React DOM API",
+    "title": "Rendertopipeablestream",
+    "topic_group": "서버 사이드 렌더링 (Server) 🖥️"
+  },
+  "src/content/reference/react-dom/server/rendertoreadablestream.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/server/rendertoreadablestream.md",
+    "sub_category": "React DOM API",
+    "title": "Rendertoreadablestream",
+    "topic_group": "서버 사이드 렌더링 (Server) 🖥️"
+  },
+  "src/content/reference/react-dom/server/rendertostaticmarkup.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/server/rendertostaticmarkup.md",
+    "sub_category": "React DOM API",
+    "title": "Rendertostaticmarkup",
+    "topic_group": "서버 사이드 렌더링 (Server) 🖥️"
+  },
+  "src/content/reference/react-dom/server/rendertostring.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react-dom/server/rendertostring.md",
+    "sub_category": "React DOM API",
+    "title": "Rendertostring",
+    "topic_group": "서버 사이드 렌더링 (Server) 🖥️"
+  },
+  "src/content/reference/react/act.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/act.md",
+    "sub_category": "React 핵심 API",
+    "title": "Act",
+    "topic_group": "기타 유틸리티 & 고급 API"
+  },
+  "src/content/reference/react/cache.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/cache.md",
+    "sub_category": "React 핵심 API",
+    "title": "Cache",
+    "topic_group": "기타 유틸리티 & 고급 API"
+  },
+  "src/content/reference/react/children.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/children.md",
+    "sub_category": "React 핵심 API",
+    "title": "Children",
+    "topic_group": "기타 유틸리티 & 고급 API"
+  },
+  "src/content/reference/react/cloneelement.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/cloneelement.md",
+    "sub_category": "React 핵심 API",
+    "title": "Cloneelement",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/component.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/component.md",
+    "sub_category": "React 핵심 API",
+    "title": "Component",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/createcontext.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/createcontext.md",
+    "sub_category": "React 핵심 API",
+    "title": "Createcontext",
+    "topic_group": "기타 유틸리티 & 고급 API"
+  },
+  "src/content/reference/react/createelement.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/createelement.md",
+    "sub_category": "React 핵심 API",
+    "title": "Createelement",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/createfactory.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/createfactory.md",
+    "sub_category": "React 핵심 API",
+    "title": "Createfactory",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/createref.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/createref.md",
+    "sub_category": "React 핵심 API",
+    "title": "Createref",
+    "topic_group": "기타 유틸리티 & 고급 API"
+  },
+  "src/content/reference/react/forwardref.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/forwardref.md",
+    "sub_category": "React 핵심 API",
+    "title": "Forwardref",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/fragment.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/fragment.md",
+    "sub_category": "React 핵심 API",
+    "title": "Fragment",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/isvalidelement.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/isvalidelement.md",
+    "sub_category": "React 핵심 API",
+    "title": "Isvalidelement",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/lazy.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/lazy.md",
+    "sub_category": "React 핵심 API",
+    "title": "Lazy",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/memo.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/memo.md",
+    "sub_category": "React 핵심 API",
+    "title": "Memo",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/profiler.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/profiler.md",
+    "sub_category": "React 핵심 API",
+    "title": "Profiler",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/purecomponent.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/purecomponent.md",
+    "sub_category": "React 핵심 API",
+    "title": "Purecomponent",
+    "topic_group": "컴포넌트 & 엘리먼트 🧱"
+  },
+  "src/content/reference/react/starttransition.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/starttransition.md",
+    "sub_category": "React 핵심 API",
+    "title": "Starttransition",
+    "topic_group": "동시성(Concurrency) & 전환(Transitions) ✨"
+  },
+  "src/content/reference/react/strictmode.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/strictmode.md",
+    "sub_category": "React 핵심 API",
+    "title": "Strictmode",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/suspense.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/suspense.md",
+    "sub_category": "React 핵심 API",
+    "title": "Suspense",
+    "topic_group": "컴포넌트 래퍼 & 특수 컴포넌트 🎁"
+  },
+  "src/content/reference/react/useactionstate.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useactionstate.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useactionstate",
+    "topic_group": "동시성(Concurrency) & 전환(Transitions) ✨"
+  },
+  "src/content/reference/react/usecallback.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usecallback.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usecallback",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usecontext.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usecontext.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usecontext",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usedebugvalue.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usedebugvalue.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usedebugvalue",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usedeferredvalue.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usedeferredvalue.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usedeferredvalue",
+    "topic_group": "동시성(Concurrency) & 전환(Transitions) ✨"
+  },
+  "src/content/reference/react/useeffect.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useeffect.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useeffect",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/useid.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useid.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useid",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/useimperativehandle.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useimperativehandle.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useimperativehandle",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/useinsertioneffect.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useinsertioneffect.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useinsertioneffect",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/uselayouteffect.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/uselayouteffect.md",
+    "sub_category": "React 핵심 API",
+    "title": "Uselayouteffect",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usememo.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usememo.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usememo",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/useoptimistic.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useoptimistic.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useoptimistic",
+    "topic_group": "동시성(Concurrency) & 전환(Transitions) ✨"
+  },
+  "src/content/reference/react/usereducer.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usereducer.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usereducer",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/useref.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/useref.md",
+    "sub_category": "React 핵심 API",
+    "title": "Useref",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usestate.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usestate.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usestate",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usesyncexternalstore.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usesyncexternalstore.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usesyncexternalstore",
+    "topic_group": "Hooks (핵심 기능) 🎣"
+  },
+  "src/content/reference/react/usetransition.md": {
+    "main_category": "API 레퍼런스 (Reference)",
+    "source_path": "src/content/reference/react/usetransition.md",
+    "sub_category": "React 핵심 API",
+    "title": "Usetransition",
+    "topic_group": "동시성(Concurrency) & 전환(Transitions) ✨"
+  }
+}

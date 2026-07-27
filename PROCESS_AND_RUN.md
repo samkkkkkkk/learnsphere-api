@@ -25,8 +25,9 @@
 ## 3. 설치 및 실행 방법
 
 ### 1) 의존성 설치
+[uv](https://docs.astral.sh/uv/)로 의존성을 관리합니다. 직접 의존성은 `pyproject.toml`, 전체 버전 고정은 `uv.lock`에 기록됩니다.
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 2) 환경 변수 파일 생성
@@ -37,7 +38,7 @@ pip install -r requirements.txt
 
 ### 4) 서버 실행
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 - 서버가 실행되면: http://127.0.0.1:8000/docs 에서 API 문서를 확인할 수 있습니다.
 

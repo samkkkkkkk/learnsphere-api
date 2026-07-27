@@ -4,13 +4,25 @@ import os
 import json
 import re
 from openai import OpenAI
+from pydantic import ValidationError
 from typing import Dict
+
+from ..schemas.schemas import LessonContentSchema
 
 # --- 설정 ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # --- OpenAI 클라이언트 초기화 ---
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+
+class LessonGenerationError(Exception):
+    """레슨 생성 실패. 호출자(파이프라인)가 실패 토픽으로 집계한다.
+
+    과거에는 오류 메시지를 core_concepts에 담은 '에러 레슨'을 정상 반환했지만,
+    저장소가 DB로 바뀌면서 에러 텍스트가 정식 버전으로 영구 저장되는 것을 막기 위해
+    명시적 예외로 전환했다.
+    """
 
 def normalize_lesson(data: Dict, level: str, topic: str) -> Dict:
     """
@@ -83,21 +95,18 @@ def generate_lesson_with_llm(level: str, topic: str, context: str) -> Dict:
         )
         print(f"  > [OpenAI] '{topic}' 주제 응답 수신 완료.")
         content = response.choices[0].message.content
-        
-        if content:
-            # LLM 응답을 파싱하고, 스키마에 맞게 필수 키를 보정하여 반환
-            lesson_data = json.loads(content)
-            return normalize_lesson(lesson_data, level, topic)
-        else:
+
+        if not content:
             raise ValueError("OpenAI 응답 내용이 비어있습니다.")
-            
+
+        lesson_data = json.loads(content)
+        normalized = normalize_lesson(lesson_data, level, topic)
+        # 저장 전 정본 스키마 검증 — 빈 core_concepts 등 불량 레슨을 여기서 차단
+        validated = LessonContentSchema.model_validate(normalized)
+        return validated.model_dump(exclude_none=True)
+
+    except ValidationError as e:
+        raise LessonGenerationError(
+            f"'{topic}' 생성 결과가 레슨 스키마에 맞지 않습니다: {e}") from e
     except Exception as e:
-        print(f"  > [OpenAI] API 호출 중 오류 발생: {e}")
-        # 오류 발생 시, 프론트엔드에 전달할 에러 메시지가 포함된 기본 JSON 구조 반환
-        return {
-            "title": topic,
-            "level": level,
-            "core_concepts": f"'{topic}' 학습 자료 생성 중 오류가 발생했습니다: {e}",
-            "code_examples": [],
-            "quizzes": []
-        }
+        raise LessonGenerationError(f"'{topic}' 생성 중 오류: {e}") from e

@@ -11,9 +11,9 @@ from sqlalchemy.orm import sessionmaker
 from app.core.database import DATABASE_URL, Base
 from app.models.models import Subject, LearningContent
 
-# 데이터 파일 경로 설정
+# 데이터 파일 경로 설정 (프로젝트 루트의 가공 산출물)
 DATA_FILE_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'react_complete_learning_data.json'
+    os.path.dirname(__file__), '..', '..', 'react_complete_learning_data.json'
 ))
 
 def seed_data():
