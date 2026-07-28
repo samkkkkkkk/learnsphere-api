@@ -119,6 +119,48 @@ def delete_schedule(db: Session, schedule: LearningSchedule) -> None:
     db.commit()
 
 
+# --- 로컬 데이터 이관 ---
+
+def import_local_data(db: Session, user_id: int, goals, schedules
+                      ) -> Dict[str, int]:
+    """localStorage 데이터를 한 트랜잭션으로 이관한다.
+
+    goals의 local_id → 신규 id 매핑으로 일정을 연결하고, 매핑이 없는
+    일정은 건너뛴 수만 보고한다. 커밋은 마지막에 1회 — 중간 실패 시
+    아무것도 남지 않아 재시도가 안전하다.
+    """
+    id_map: Dict[int, int] = {}
+    for item in goals:
+        goal = LearningGoal(
+            user_id=user_id, title=item.title, category=item.category,
+            deadline=item.deadline, daily_study_time=item.daily_study_time,
+            description=item.description)
+        db.add(goal)
+        db.flush()  # 신규 id 확보 (커밋 아님)
+        id_map[item.local_id] = goal.id
+
+    schedules_created = 0
+    schedules_skipped = 0
+    for item in schedules:
+        goal_id = id_map.get(item.local_goal_id)
+        if goal_id is None:
+            schedules_skipped += 1
+            continue
+        db.add(LearningSchedule(
+            user_id=user_id, goal_id=goal_id, date=item.date, time=item.time,
+            content=item.content, duration_minutes=item.duration_minutes,
+            completed=item.completed,
+            completed_at=datetime.now() if item.completed else None))
+        schedules_created += 1
+
+    db.commit()
+    return {
+        "goals_created": len(goals),
+        "schedules_created": schedules_created,
+        "schedules_skipped": schedules_skipped,
+    }
+
+
 # --- 진도율 집계 ---
 
 def get_goal_stats(db: Session, user_id: int) -> Dict[int, Dict[str, int]]:

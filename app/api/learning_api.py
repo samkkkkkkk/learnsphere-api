@@ -15,8 +15,8 @@ from ..core.database import get_db
 from ..crud import crud_learning
 from ..models.models import LearningGoal, LearningSchedule, User
 from ..schemas.learning import (
-    GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate, ScheduleCreate,
-    ScheduleOut, ScheduleUpdate,
+    GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate, ImportRequest,
+    ImportResult, ScheduleCreate, ScheduleOut, ScheduleUpdate,
 )
 
 router = APIRouter(prefix="/learning", tags=["Learning"])
@@ -129,3 +129,13 @@ def update_schedule(schedule_id: int, request: ScheduleUpdate,
 def delete_schedule(schedule_id: int, db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)):
     crud_learning.delete_schedule(db, _require_schedule(db, schedule_id, user))
+
+
+# --- 로컬 데이터 이관 ---
+
+@router.post("/import", response_model=ImportResult)
+def import_local_data(request: ImportRequest, db: Session = Depends(get_db),
+                      user: User = Depends(get_current_user)):
+    """localStorage에 있던 목표/일정을 한 번에 서버로 옮긴다 (단일 트랜잭션)."""
+    return crud_learning.import_local_data(
+        db, user.id, request.goals, request.schedules)

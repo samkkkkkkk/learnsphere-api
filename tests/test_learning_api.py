@@ -175,6 +175,83 @@ def test_goal_delete_cascades_schedules(client, auth_headers, db_session):
     assert db_session.query(LearningSchedule).count() == 0
 
 
+# --- P6: 로컬 데이터 이관 ---
+
+def test_import_maps_local_goal_ids(client, auth_headers):
+    response = client.post("/api/v1/learning/import", json={
+        "goals": [
+            {"local_id": 111, "title": "로컬 목표 A", "category": "programming",
+             "deadline": "2026-12-31", "daily_study_time": 60},
+            {"local_id": 222, "title": "로컬 목표 B", "category": "design",
+             "deadline": "2026-12-31", "daily_study_time": 30},
+        ],
+        "schedules": [
+            {"local_goal_id": 222, "date": "2026-08-01", "time": "09:00",
+             "content": "B의 일정", "duration_minutes": 60},
+        ],
+    }, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "goals_created": 2, "schedules_created": 1, "schedules_skipped": 0}
+
+    # 일정이 올바른 목표(B)에 붙었는지 — B만 schedule_total 1
+    goals = client.get("/api/v1/learning/goals", headers=auth_headers).json()
+    by_title = {g["title"]: g for g in goals}
+    assert by_title["로컬 목표 B"]["progress_detail"]["schedule_total"] == 1
+    assert by_title["로컬 목표 A"]["progress_detail"]["schedule_total"] == 0
+
+
+def test_import_skips_orphan_schedules(client, auth_headers):
+    response = client.post("/api/v1/learning/import", json={
+        "goals": [
+            {"local_id": 1, "title": "목표", "category": "other",
+             "deadline": "2026-12-31", "daily_study_time": 60},
+        ],
+        "schedules": [
+            {"local_goal_id": 1, "date": "2026-08-01", "time": "09:00",
+             "content": "연결됨", "duration_minutes": 60},
+            {"local_goal_id": 999, "date": "2026-08-01", "time": "10:00",
+             "content": "고아 일정", "duration_minutes": 60},
+        ],
+    }, headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["schedules_created"] == 1
+    assert response.json()["schedules_skipped"] == 1
+
+
+def test_import_rejects_oversized_payload(client, auth_headers):
+    goals = [
+        {"local_id": i, "title": f"목표 {i}", "category": "other",
+         "deadline": "2026-12-31", "daily_study_time": 60}
+        for i in range(501)
+    ]
+    response = client.post("/api/v1/learning/import",
+                           json={"goals": goals, "schedules": []},
+                           headers=auth_headers)
+    assert response.status_code == 422
+
+
+def test_import_preserves_completed_flag(client, auth_headers, db_session):
+    from app.models.models import LearningSchedule
+
+    response = client.post("/api/v1/learning/import", json={
+        "goals": [
+            {"local_id": 1, "title": "목표", "category": "other",
+             "deadline": "2026-12-31", "daily_study_time": 60},
+        ],
+        "schedules": [
+            {"local_goal_id": 1, "date": "2026-08-01", "time": "09:00",
+             "content": "완료된 일정", "duration_minutes": 60,
+             "completed": True},
+        ],
+    }, headers=auth_headers)
+    assert response.status_code == 200
+
+    stored = db_session.query(LearningSchedule).one()
+    assert stored.completed is True
+    assert stored.completed_at is not None
+
+
 def test_goal_progress_counts_completed_schedules(client, auth_headers):
     goal = _create_goal(client, auth_headers)
     schedules = [_create_schedule(client, auth_headers, goal["id"],

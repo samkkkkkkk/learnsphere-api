@@ -5,7 +5,7 @@
 GoalOut의 progress는 DB 값이 아니라 조회 시 계산해 채운다.
 """
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -76,6 +76,45 @@ class ScheduleOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- 로컬 데이터 이관 ---
+
+# 한 번에 받는 항목 수 상한 (goals/schedules 각각)
+IMPORT_MAX_ITEMS = 500
+
+
+class ImportGoal(BaseModel):
+    """localStorage에 있던 목표 하나. local_id는 일정 연결용 임시 키다."""
+    local_id: int
+    title: str = Field(min_length=1, max_length=255)
+    category: str = Field(min_length=1, max_length=20)
+    deadline: date
+    description: Optional[str] = None
+    daily_study_time: int = Field(ge=15, le=480)
+
+
+class ImportSchedule(BaseModel):
+    local_goal_id: int
+    date: date
+    time: str = Field(pattern=r"^\d{2}:\d{2}$")
+    content: str = Field(min_length=1, max_length=255)
+    duration_minutes: int = Field(ge=15, le=300)
+    completed: bool = False
+
+
+class ImportRequest(BaseModel):
+    goals: List[ImportGoal] = Field(
+        default_factory=list, max_length=IMPORT_MAX_ITEMS)
+    schedules: List[ImportSchedule] = Field(
+        default_factory=list, max_length=IMPORT_MAX_ITEMS)
+
+
+class ImportResult(BaseModel):
+    goals_created: int
+    schedules_created: int
+    # local_goal_id가 goals에 없어 연결하지 못한 일정 수
+    schedules_skipped: int
 
 
 class GoalOut(BaseModel):
