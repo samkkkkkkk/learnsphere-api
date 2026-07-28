@@ -1,7 +1,7 @@
 # backend/app/models/models.py
 from sqlalchemy import (
-    Boolean, Column, DateTime, ForeignKey, Index, Integer, JSON, String, Text,
-    UniqueConstraint, text,
+    Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, JSON, String,
+    Text, UniqueConstraint, text,
 )
 from sqlalchemy.orm import relationship
 from ..core.database import Base # database.py에서 Base를 가져옴
@@ -51,6 +51,25 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=datetime.now)
 
     session = relationship("ChatSession", back_populates="messages")
+
+
+class LearningGoal(Base):
+    """학습자가 세운 학습 목표.
+
+    진도율은 저장하지 않는다 — 완료 일정/레슨 비율로 조회 시 계산한다.
+    linked_level이 있으면 해당 레벨 레슨 완료가 진도에 합산된다.
+    """
+    __tablename__ = 'learning_goals'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    category = Column(String(20), nullable=False)  # programming/design/language/business/other
+    description = Column(Text, nullable=True)
+    deadline = Column(Date, nullable=False)
+    daily_study_time = Column(Integer, nullable=False)  # 분 단위
+    linked_level = Column(String(20), nullable=True)    # 초급/중급/고급
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
 class Subject(Base):
