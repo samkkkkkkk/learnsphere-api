@@ -3,7 +3,7 @@
 
 진도율은 저장하지 않는다 — get_goal_stats가 조회 시점에 완료 비율을 집계한다.
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 
 from sqlalchemy import case, func
@@ -290,6 +290,77 @@ def get_goal_stats(db: Session, user_id: int) -> Dict[int, Dict[str, int]]:
             "lesson_total": level_stat["total"],
         }
     return stats
+
+
+# --- 대시보드 통계 ---
+
+def _sunday_of(day: date) -> date:
+    """해당 날짜가 속한 주의 일요일 (주간 통계는 일~토 기준 — 프론트 캘린더와 동일)."""
+    return day - timedelta(days=(day.weekday() + 1) % 7)
+
+
+def _streaks(completed_dates, today: date) -> Dict[str, int]:
+    """완료 일정이 있는 날짜 집합에서 (현재 연속일, 역대 최장 연속일)을 계산한다.
+
+    현재 연속일은 오늘부터 거슬러 세되, 오늘이 비어 있으면 어제까지의
+    연속을 인정한다 (아직 오늘 학습 전일 수 있으므로 — 기존 화면 동작과 동일).
+    """
+    if not completed_dates:
+        return {"current": 0, "best": 0}
+
+    current = 0
+    offset = 0
+    while True:
+        day = today - timedelta(days=offset)
+        if day in completed_dates:
+            current += 1
+        elif offset > 0:
+            break
+        offset += 1
+        if offset > (today - min(completed_dates)).days + 1:
+            break
+
+    best = run = 1
+    ordered = sorted(completed_dates)
+    for previous, current_day in zip(ordered, ordered[1:]):
+        run = run + 1 if (current_day - previous).days == 1 else 1
+        best = max(best, run)
+
+    return {"current": current, "best": best}
+
+
+def get_dashboard_stats(db: Session, user_id: int, today: date) -> Dict:
+    """진도현황 탭의 통계 일괄. today를 인자로 받아 테스트 가능하게 한다."""
+    stats = get_goal_stats(db, user_id)
+    progresses = [calc_progress(detail) for detail in stats.values()]
+    overall = round(sum(progresses) / len(progresses), 1) if progresses else 0.0
+
+    completed_rows = (db.query(LearningSchedule)
+                      .filter(LearningSchedule.user_id == user_id,
+                              LearningSchedule.completed.is_(True))
+                      .all())
+
+    week_start = _sunday_of(today)
+    week_end = week_start + timedelta(days=6)
+    weekly_pattern = [0.0] * 7  # 일~토
+    weekly_minutes = 0
+    for row in completed_rows:
+        if week_start <= row.date <= week_end:
+            weekly_pattern[(row.date.weekday() + 1) % 7] += \
+                row.duration_minutes / 60
+            weekly_minutes += row.duration_minutes
+
+    streaks = _streaks({row.date for row in completed_rows}, today)
+
+    return {
+        "overall_progress": overall,
+        "completed_goals": sum(1 for value in progresses if value >= 100),
+        "total_goals": len(progresses),
+        "weekly_hours": round(weekly_minutes / 60, 1),
+        "weekly_pattern": [round(value, 2) for value in weekly_pattern],
+        "current_streak": streaks["current"],
+        "best_streak": streaks["best"],
+    }
 
 
 def calc_progress(detail: Dict[str, int]) -> float:

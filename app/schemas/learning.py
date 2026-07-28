@@ -78,6 +78,19 @@ class ScheduleOut(BaseModel):
         from_attributes = True
 
 
+# --- 대시보드 ---
+
+class DashboardOut(BaseModel):
+    overall_progress: float
+    completed_goals: int
+    total_goals: int
+    weekly_hours: float
+    # 일~토 7칸, 완료 일정의 학습 시간(시간 단위)
+    weekly_pattern: List[float]
+    current_streak: int
+    best_streak: int
+
+
 # --- 레슨 퀴즈 진도 ---
 
 class LessonProgressUpsert(BaseModel):

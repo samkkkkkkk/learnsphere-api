@@ -15,10 +15,10 @@ from ..core.database import get_db
 from ..crud import crud_learning, crud_lessons
 from ..models.models import LearningGoal, LearningSchedule, User
 from ..schemas.learning import (
-    GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate, ImportRequest,
-    ImportResult, LessonProgressImportRequest, LessonProgressImportResult,
-    LessonProgressOut, LessonProgressUpsert, ScheduleCreate, ScheduleOut,
-    ScheduleUpdate,
+    DashboardOut, GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate,
+    ImportRequest, ImportResult, LessonProgressImportRequest,
+    LessonProgressImportResult, LessonProgressOut, LessonProgressUpsert,
+    ScheduleCreate, ScheduleOut, ScheduleUpdate,
 )
 
 router = APIRouter(prefix="/learning", tags=["Learning"])
@@ -131,6 +131,15 @@ def update_schedule(schedule_id: int, request: ScheduleUpdate,
 def delete_schedule(schedule_id: int, db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)):
     crud_learning.delete_schedule(db, _require_schedule(db, schedule_id, user))
+
+
+# --- 대시보드 ---
+
+@router.get("/dashboard", response_model=DashboardOut)
+def get_dashboard(db: Session = Depends(get_db),
+                  user: User = Depends(get_current_user)):
+    """진도현황 탭 통계 일괄 (진도율·주간 학습·연속 학습일)."""
+    return crud_learning.get_dashboard_stats(db, user.id, date.today())
 
 
 # --- 레슨 퀴즈 진도 ---

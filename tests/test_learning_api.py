@@ -252,6 +252,69 @@ def test_linked_level_counts_only_current_lessons(client, auth_headers,
     assert stored["progress_detail"]["lesson_total"] == 2
 
 
+# --- P9: 대시보드 ---
+
+def _seed_completed_schedule(db, user_id, goal_id, schedule_date,
+                             duration=60):
+    from datetime import date as date_cls
+
+    from app.crud import crud_learning
+
+    return crud_learning.create_schedule(
+        db, user_id, goal_id=goal_id,
+        schedule_date=date_cls.fromisoformat(schedule_date), time="09:00",
+        content="학습", duration_minutes=duration, completed=True)
+
+
+def test_dashboard_best_streak_exceeds_current(client, auth_headers,
+                                               db_session, auth_user):
+    from datetime import date as date_cls
+
+    from app.crud import crud_learning
+
+    goal = _create_goal(client, auth_headers)
+    # 과거 5연속 (7/10~7/14) + 현재 2연속 (7/27~7/28)
+    for day in ["2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13",
+                "2026-07-14", "2026-07-27", "2026-07-28"]:
+        _seed_completed_schedule(db_session, auth_user.id, goal["id"], day)
+
+    stats = crud_learning.get_dashboard_stats(
+        db_session, auth_user.id, today=date_cls(2026, 7, 28))
+    assert stats["best_streak"] == 5
+    assert stats["current_streak"] == 2
+
+
+def test_dashboard_weekly_pattern_shape(client, auth_headers, db_session,
+                                        auth_user):
+    from datetime import date as date_cls
+
+    from app.crud import crud_learning
+
+    goal = _create_goal(client, auth_headers)
+    # 2026-07-28은 화요일. 이번 주(일 7/26 ~ 토 8/1)의 완료 일정만 집계
+    _seed_completed_schedule(db_session, auth_user.id, goal["id"],
+                             "2026-07-27", duration=90)   # 월
+    _seed_completed_schedule(db_session, auth_user.id, goal["id"],
+                             "2026-07-19", duration=60)   # 지난주 — 제외
+
+    stats = crud_learning.get_dashboard_stats(
+        db_session, auth_user.id, today=date_cls(2026, 7, 28))
+    assert len(stats["weekly_pattern"]) == 7
+    assert stats["weekly_pattern"][1] == 1.5   # 월요일 칸
+    assert sum(stats["weekly_pattern"]) == 1.5  # 지난주 미포함
+    assert stats["weekly_hours"] == 1.5
+
+
+def test_dashboard_empty_user_returns_zeros(client, auth_headers):
+    response = client.get("/api/v1/learning/dashboard", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        "overall_progress": 0.0, "completed_goals": 0, "total_goals": 0,
+        "weekly_hours": 0.0, "weekly_pattern": [0.0] * 7,
+        "current_streak": 0, "best_streak": 0,
+    }
+
+
 # --- P6: 로컬 데이터 이관 ---
 
 def test_import_maps_local_goal_ids(client, auth_headers):
