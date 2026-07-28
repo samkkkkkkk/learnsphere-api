@@ -175,6 +175,83 @@ def test_goal_delete_cascades_schedules(client, auth_headers, db_session):
     assert db_session.query(LearningSchedule).count() == 0
 
 
+# --- P8: 목표-레벨 연결 진도율 ---
+
+def _seed_level_lessons(db, level, count, completed_user_id=None,
+                        completed_count=0):
+    """해당 레벨의 현행 레슨 count개를 만들고, 앞에서 completed_count개를
+    completed_user_id의 완료로 기록한다."""
+    from app.crud import crud_lessons, crud_learning
+
+    generation = crud_lessons.create_generation(db, source="import")
+    lessons = []
+    for i in range(count):
+        lesson = crud_lessons.upsert_lesson(db, level, f"lesson-{level}-{i}",
+                                            f"레슨 {i}")
+        crud_lessons.insert_version(db, lesson, generation.id, {
+            "title": f"레슨 {i}", "level": level,
+            "core_concepts": "내용", "code_examples": [], "quizzes": [],
+        }, position=i + 1)
+        lessons.append(lesson)
+    db.commit()
+    crud_lessons.finalize_generation(db, generation.id)
+
+    for lesson in lessons[:completed_count]:
+        crud_learning.upsert_lesson_progress(
+            db, completed_user_id, lesson.id,
+            done=1, correct=1, total=1, completed=True)
+    return lessons
+
+
+def test_goal_progress_includes_linked_level_lessons(client, auth_headers,
+                                                     db_session, auth_user):
+    _seed_level_lessons(db_session, "중급", 4,
+                        completed_user_id=auth_user.id, completed_count=1)
+    goal = _create_goal(client, auth_headers, linked_level="중급")
+    schedule = _create_schedule(client, auth_headers, goal["id"])
+    client.patch(f"/api/v1/learning/schedules/{schedule['id']}",
+                 json={"completed": True}, headers=auth_headers)
+
+    stored = client.get("/api/v1/learning/goals", headers=auth_headers).json()[0]
+    # (일정 1 + 레슨 1) / (일정 1 + 레슨 4) = 40.0
+    assert stored["progress"] == 40.0
+    assert stored["progress_detail"] == {
+        "schedule_done": 1, "schedule_total": 1,
+        "lesson_done": 1, "lesson_total": 4,
+    }
+
+
+def test_goal_progress_without_linked_level_unchanged(client, auth_headers,
+                                                      db_session, auth_user):
+    # 레슨과 완료 기록이 있어도, 레벨을 연결하지 않은 목표에는 합산되지 않는다
+    _seed_level_lessons(db_session, "초급", 3,
+                        completed_user_id=auth_user.id, completed_count=2)
+    goal = _create_goal(client, auth_headers)
+    schedule = _create_schedule(client, auth_headers, goal["id"])
+    client.patch(f"/api/v1/learning/schedules/{schedule['id']}",
+                 json={"completed": True}, headers=auth_headers)
+
+    stored = client.get("/api/v1/learning/goals", headers=auth_headers).json()[0]
+    assert stored["progress"] == 100.0
+    assert stored["progress_detail"]["lesson_total"] == 0
+
+
+def test_linked_level_counts_only_current_lessons(client, auth_headers,
+                                                  db_session, auth_user):
+    from datetime import datetime
+
+    lessons = _seed_level_lessons(db_session, "고급", 3,
+                                  completed_user_id=auth_user.id,
+                                  completed_count=0)
+    # 한 개는 보관 처리 — 분모에서 빠져야 한다
+    lessons[0].archived_at = datetime.now()
+    db_session.commit()
+
+    _create_goal(client, auth_headers, linked_level="고급")
+    stored = client.get("/api/v1/learning/goals", headers=auth_headers).json()[0]
+    assert stored["progress_detail"]["lesson_total"] == 2
+
+
 # --- P6: 로컬 데이터 이관 ---
 
 def test_import_maps_local_goal_ids(client, auth_headers):

@@ -231,11 +231,40 @@ def import_local_data(db: Session, user_id: int, goals, schedules
 
 # --- 진도율 집계 ---
 
+def _level_lesson_stats(db: Session, user_id: int,
+                        levels) -> Dict[str, Dict[str, int]]:
+    """레벨별 (현행 레슨 수, 완료 레슨 수)를 사용자당 1회 집계한다.
+
+    분모는 항상 현행(is_current, 미보관) 레슨 기준 — 세대 교체 후에도
+    get_lesson_index와 자동으로 일관된다.
+    """
+    from . import crud_lessons
+
+    index = crud_lessons.get_lesson_index(db)
+    completed_ids = {
+        row.lesson_id
+        for row in (db.query(LessonProgress.lesson_id)
+                    .filter(LessonProgress.user_id == user_id,
+                            LessonProgress.completed.is_(True))
+                    .all())
+    }
+
+    stats: Dict[str, Dict[str, int]] = {}
+    for level in levels:
+        lessons = index.get(level, [])
+        stats[level] = {
+            "total": len(lessons),
+            "done": sum(1 for lesson in lessons
+                        if lesson["id"] in completed_ids),
+        }
+    return stats
+
+
 def get_goal_stats(db: Session, user_id: int) -> Dict[int, Dict[str, int]]:
     """goal_id별 진도 근거 수치를 한 번에 집계한다 (N+1 방지).
 
     반환: {goal_id: {schedule_done, schedule_total, lesson_done, lesson_total}}
-    일정은 group by 1쿼리로 집계한다. lesson_*은 P8(목표-레벨 연결)에서 붙는다.
+    일정은 group by 1쿼리, 연결 레벨 레슨은 레벨별 1회 집계 후 분배한다.
     """
     rows = (db.query(
                 LearningSchedule.goal_id,
@@ -246,12 +275,19 @@ def get_goal_stats(db: Session, user_id: int) -> Dict[int, Dict[str, int]]:
             .all())
     by_goal = {goal_id: (total, int(done or 0)) for goal_id, total, done in rows}
 
+    goals = list_goals(db, user_id)
+    linked_levels = {goal.linked_level for goal in goals if goal.linked_level}
+    by_level = (_level_lesson_stats(db, user_id, linked_levels)
+                if linked_levels else {})
+
     stats: Dict[int, Dict[str, int]] = {}
-    for goal in list_goals(db, user_id):
+    for goal in goals:
         total, done = by_goal.get(goal.id, (0, 0))
+        level_stat = by_level.get(goal.linked_level, {"total": 0, "done": 0})
         stats[goal.id] = {
             "schedule_done": done, "schedule_total": total,
-            "lesson_done": 0, "lesson_total": 0,
+            "lesson_done": level_stat["done"],
+            "lesson_total": level_stat["total"],
         }
     return stats
 
