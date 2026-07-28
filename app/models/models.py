@@ -71,6 +71,36 @@ class LearningGoal(Base):
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
+    schedules = relationship(
+        "LearningSchedule", back_populates="goal",
+        cascade="all, delete-orphan", order_by="LearningSchedule.id")
+
+
+class LearningSchedule(Base):
+    """목표에 묶인 학습 일정 하나.
+
+    user_id를 중복 보관해 goal join 없이 소유권을 검사한다.
+    completed_at은 streak(연속 학습일) 계산의 근거다.
+    """
+    __tablename__ = 'learning_schedules'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    goal_id = Column(Integer, ForeignKey('learning_goals.id'),
+                     nullable=False, index=True)
+    date = Column(Date, nullable=False)
+    time = Column(String(5), nullable=False)  # "HH:MM"
+    content = Column(String(255), nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    completed = Column(Boolean, nullable=False, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    goal = relationship("LearningGoal", back_populates="schedules")
+    __table_args__ = (
+        # 주간/월간 범위 조회용 복합 인덱스
+        Index('ix_learning_schedules_user_date', 'user_id', 'date'),
+    )
+
 
 class Subject(Base):
     __tablename__ = 'subjects'

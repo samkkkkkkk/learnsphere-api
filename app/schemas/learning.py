@@ -45,6 +45,39 @@ class GoalProgressDetail(BaseModel):
     lesson_total: int = 0
 
 
+# --- 일정 ---
+
+class ScheduleCreate(BaseModel):
+    goal_id: int
+    date: date
+    time: str = Field(pattern=r"^\d{2}:\d{2}$", description='"HH:MM"')
+    content: str = Field(min_length=1, max_length=255)
+    duration_minutes: int = Field(ge=15, le=300)
+
+
+class ScheduleUpdate(BaseModel):
+    """PATCH 부분 수정 — completed 전환 시 completed_at을 서버가 관리한다."""
+    date: Optional[date] = None
+    time: Optional[str] = Field(default=None, pattern=r"^\d{2}:\d{2}$")
+    content: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    duration_minutes: Optional[int] = Field(default=None, ge=15, le=300)
+    completed: Optional[bool] = None
+
+
+class ScheduleOut(BaseModel):
+    id: int
+    goal_id: int
+    date: date
+    time: str
+    content: str
+    duration_minutes: int
+    completed: bool
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class GoalOut(BaseModel):
     id: int
     title: str

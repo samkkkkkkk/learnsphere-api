@@ -4,7 +4,8 @@
 전 엔드포인트가 학습자 JWT 인증을 요구한다. 진도율은 DB 값이 아니라
 crud_learning.get_goal_stats로 조회 시점에 계산해 응답에 채운다.
 """
-from typing import List
+from datetime import date
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -12,9 +13,10 @@ from sqlalchemy.orm import Session
 from ..core.auth import get_current_user
 from ..core.database import get_db
 from ..crud import crud_learning
-from ..models.models import LearningGoal, User
+from ..models.models import LearningGoal, LearningSchedule, User
 from ..schemas.learning import (
-    GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate,
+    GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate, ScheduleCreate,
+    ScheduleOut, ScheduleUpdate,
 )
 
 router = APIRouter(prefix="/learning", tags=["Learning"])
@@ -79,3 +81,51 @@ def update_goal(goal_id: int, request: GoalUpdate,
 def delete_goal(goal_id: int, db: Session = Depends(get_db),
                 user: User = Depends(get_current_user)):
     crud_learning.delete_goal(db, _require_goal(db, goal_id, user))
+
+
+# --- 일정 ---
+
+def _require_schedule(db: Session, schedule_id: int,
+                      user: User) -> LearningSchedule:
+    """본인 일정만 통과시킨다. 남의 일정은 403."""
+    schedule = crud_learning.get_owned_schedule(db, schedule_id, user.id)
+    if schedule is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="접근할 수 없는 일정입니다.")
+    return schedule
+
+
+@router.post("/schedules", response_model=ScheduleOut,
+             status_code=status.HTTP_201_CREATED)
+def create_schedule(request: ScheduleCreate, db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)):
+    # 남의 목표에 일정을 달 수 없다
+    _require_goal(db, request.goal_id, user)
+    return crud_learning.create_schedule(
+        db, user.id, goal_id=request.goal_id, schedule_date=request.date,
+        time=request.time, content=request.content,
+        duration_minutes=request.duration_minutes)
+
+
+@router.get("/schedules", response_model=List[ScheduleOut])
+def list_schedules(start: Optional[date] = None, end: Optional[date] = None,
+                   db: Session = Depends(get_db),
+                   user: User = Depends(get_current_user)):
+    return crud_learning.list_schedules(db, user.id, start, end)
+
+
+@router.patch("/schedules/{schedule_id}", response_model=ScheduleOut)
+def update_schedule(schedule_id: int, request: ScheduleUpdate,
+                    db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)):
+    schedule = _require_schedule(db, schedule_id, user)
+    return crud_learning.update_schedule(
+        db, schedule, request.model_dump(exclude_unset=True))
+
+
+@router.delete("/schedules/{schedule_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
+def delete_schedule(schedule_id: int, db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)):
+    crud_learning.delete_schedule(db, _require_schedule(db, schedule_id, user))
