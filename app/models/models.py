@@ -126,6 +126,26 @@ class LessonProgress(Base):
     )
 
 
+class UploadedDocument(Base):
+    """관리자가 업로드한 RAG 문서. 벡터는 Qdrant 전용 컬렉션(uploaded-docs)에 있다.
+
+    filename unique가 중복 업로드 409의 근거다 — 교체는 삭제 후 재업로드.
+    Qdrant point id가 (id, chunk_idx) 기반 결정적 uuid5라 별도 uuid 컬럼은 없다.
+    """
+    __tablename__ = 'uploaded_documents'
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String(255), unique=True, nullable=False)
+    file_type = Column(String(10), nullable=False)   # 'pdf' | 'md' | 'txt'
+    file_size = Column(Integer, nullable=False)      # bytes
+    # 'pending' | 'processing' | 'completed' | 'failed'
+    status = Column(String(20), nullable=False, default='pending')
+    chunk_count = Column(Integer, nullable=True)     # completed 시 기록
+    error = Column(Text, nullable=True)              # failed 시 기록
+    created_at = Column(DateTime, default=datetime.now)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+
 class Subject(Base):
     __tablename__ = 'subjects'
     subject_id = Column(Integer, primary_key=True, index=True)
