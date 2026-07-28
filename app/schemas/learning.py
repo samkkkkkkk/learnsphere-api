@@ -5,7 +5,7 @@
 GoalOut의 progress는 DB 값이 아니라 조회 시 계산해 채운다.
 """
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -89,6 +89,17 @@ class DashboardOut(BaseModel):
     weekly_pattern: List[float]
     current_streak: int
     best_streak: int
+
+
+# --- AI 피드백 ---
+
+class FeedbackRequest(BaseModel):
+    feedback_type: Literal["content", "schedule", "progress", "motivation"]
+
+
+class FeedbackResponse(BaseModel):
+    # 마크다운 형식의 피드백 본문
+    answer: str
 
 
 # --- 레슨 퀴즈 진도 ---

@@ -10,18 +10,23 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from ..agents import feedback_agent
 from ..core.auth import get_current_user
 from ..core.database import get_db
 from ..crud import crud_learning, crud_lessons
 from ..models.models import LearningGoal, LearningSchedule, User
 from ..schemas.learning import (
-    DashboardOut, GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate,
-    ImportRequest, ImportResult, LessonProgressImportRequest,
-    LessonProgressImportResult, LessonProgressOut, LessonProgressUpsert,
-    ScheduleCreate, ScheduleOut, ScheduleUpdate,
+    DashboardOut, FeedbackRequest, FeedbackResponse, GoalCreate, GoalOut,
+    GoalProgressDetail, GoalUpdate, ImportRequest, ImportResult,
+    LessonProgressImportRequest, LessonProgressImportResult,
+    LessonProgressOut, LessonProgressUpsert, ScheduleCreate, ScheduleOut,
+    ScheduleUpdate,
 )
 
 router = APIRouter(prefix="/learning", tags=["Learning"])
+
+# 피드백 생성 실패 시 클라이언트 문구 (내부 오류 상세는 로그로만)
+FEEDBACK_ERROR_MESSAGE = "피드백을 생성하지 못했습니다. 잠시 후 다시 시도해주세요."
 
 
 def _require_goal(db: Session, goal_id: int, user: User) -> LearningGoal:
@@ -140,6 +145,24 @@ def get_dashboard(db: Session = Depends(get_db),
                   user: User = Depends(get_current_user)):
     """진도현황 탭 통계 일괄 (진도율·주간 학습·연속 학습일)."""
     return crud_learning.get_dashboard_stats(db, user.id, date.today())
+
+
+# --- AI 피드백 ---
+
+@router.post("/feedback", response_model=FeedbackResponse)
+def request_feedback(request: FeedbackRequest, db: Session = Depends(get_db),
+                     user: User = Depends(get_current_user)):
+    """학습 현황을 근거로 타입별 AI 피드백을 생성한다 (마크다운)."""
+    snapshot = crud_learning.build_feedback_snapshot(db, user.id, date.today())
+
+    try:
+        answer = feedback_agent.run_feedback(request.feedback_type, snapshot)
+    except feedback_agent.FeedbackError as e:
+        print(f"  > [Learning] 피드백 생성 실패: {e}")
+        raise HTTPException(
+            status_code=502, detail=FEEDBACK_ERROR_MESSAGE) from e
+
+    return FeedbackResponse(answer=answer)
 
 
 # --- 레슨 퀴즈 진도 ---

@@ -370,3 +370,58 @@ def calc_progress(detail: Dict[str, int]) -> float:
         return 0.0
     done = detail["schedule_done"] + detail["lesson_done"]
     return round(done / total * 100, 1)
+
+
+# --- AI 피드백 스냅샷 ---
+
+# 스냅샷에 담을 최근 일정 기간 (토큰 절약)
+FEEDBACK_WINDOW_DAYS = 14
+
+
+def build_feedback_snapshot(db: Session, user_id: int, today: date) -> str:
+    """AI 피드백의 근거가 될 학습 현황을 사람이 읽는 텍스트로 조립한다."""
+    lines: List[str] = []
+
+    goals = list_goals(db, user_id)
+    stats = get_goal_stats(db, user_id)
+    lines.append(f"[학습 목표] 총 {len(goals)}개")
+    for goal in goals:
+        detail = stats.get(goal.id, {})
+        progress = calc_progress(detail) if detail else 0.0
+        parts = [
+            f"- {goal.title} (카테고리 {goal.category}, 마감 {goal.deadline}, "
+            f"일일 목표 {goal.daily_study_time}분): 진도 {progress}%",
+            f"일정 {detail.get('schedule_done', 0)}/{detail.get('schedule_total', 0)} 완료",
+        ]
+        if goal.linked_level:
+            parts.append(
+                f"{goal.linked_level} 레슨 {detail.get('lesson_done', 0)}/"
+                f"{detail.get('lesson_total', 0)} 완료")
+        lines.append(", ".join(parts))
+
+    window_start = today - timedelta(days=FEEDBACK_WINDOW_DAYS)
+    recent = list_schedules(db, user_id, window_start, today)
+    done = [row for row in recent if row.completed]
+    done_minutes = sum(row.duration_minutes for row in done)
+    completion = round(len(done) / len(recent) * 100) if recent else 0
+    lines.append(
+        f"\n[최근 {FEEDBACK_WINDOW_DAYS}일 일정] 총 {len(recent)}개 중 "
+        f"{len(done)}개 완료 (완료율 {completion}%), "
+        f"완료한 학습 시간 {round(done_minutes / 60, 1)}시간")
+
+    today_rows = [row for row in list_schedules(db, user_id, today, today)]
+    if today_rows:
+        lines.append("[오늘 일정]")
+        for row in today_rows:
+            state = "완료" if row.completed else "예정"
+            lines.append(f"- {row.time} {row.content} ({row.duration_minutes}분, {state})")
+
+    dashboard = get_dashboard_stats(db, user_id, today)
+    lines.append(
+        f"\n[통계] 전체 진도율 {dashboard['overall_progress']}%, "
+        f"완료 목표 {dashboard['completed_goals']}/{dashboard['total_goals']}개, "
+        f"이번 주 학습 {dashboard['weekly_hours']}시간, "
+        f"연속 학습 {dashboard['current_streak']}일 "
+        f"(최고 {dashboard['best_streak']}일)")
+
+    return "\n".join(lines)
