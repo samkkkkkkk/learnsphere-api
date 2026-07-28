@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
-from ..models.models import LearningGoal, LearningSchedule
+from ..models.models import LearningGoal, LearningSchedule, LessonProgress
 
 
 # --- 목표 ---
@@ -117,6 +117,74 @@ def update_schedule(db: Session, schedule: LearningSchedule,
 def delete_schedule(db: Session, schedule: LearningSchedule) -> None:
     db.delete(schedule)
     db.commit()
+
+
+# --- 레슨 퀴즈 진도 ---
+
+def _apply_progress(row: LessonProgress, *, done: int, correct: int,
+                    total: int, completed: bool) -> None:
+    """진도 값을 반영한다. 완료가 풀리면 completed_at도 비운다."""
+    row.done = done
+    row.correct = correct
+    row.total = total
+    if completed and not row.completed:
+        row.completed_at = datetime.now()
+    elif not completed:
+        row.completed_at = None
+    row.completed = completed
+
+
+def upsert_lesson_progress(db: Session, user_id: int, lesson_id: int, *,
+                           done: int, correct: int, total: int,
+                           completed: bool) -> LessonProgress:
+    """(user, lesson)당 1행 유지 — 있으면 갱신, 없으면 생성."""
+    row = (db.query(LessonProgress)
+           .filter(LessonProgress.user_id == user_id,
+                   LessonProgress.lesson_id == lesson_id)
+           .first())
+    if row is None:
+        row = LessonProgress(user_id=user_id, lesson_id=lesson_id)
+        db.add(row)
+    _apply_progress(row, done=done, correct=correct, total=total,
+                    completed=completed)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_lesson_progress(db: Session, user_id: int) -> List[LessonProgress]:
+    return (db.query(LessonProgress)
+            .filter(LessonProgress.user_id == user_id)
+            .order_by(LessonProgress.lesson_id)
+            .all())
+
+
+def import_lesson_progress(db: Session, user_id: int, items,
+                           valid_lesson_ids) -> Dict[str, int]:
+    """로컬 퀴즈 기록을 한 트랜잭션으로 이관한다.
+
+    없는(보관 포함) 레슨은 건너뛴다. 이미 서버 기록이 있으면 갱신한다.
+    """
+    existing = {row.lesson_id: row for row in list_lesson_progress(db, user_id)}
+    created = updated = skipped = 0
+
+    for item in items:
+        if item.lesson_id not in valid_lesson_ids:
+            skipped += 1
+            continue
+        row = existing.get(item.lesson_id)
+        if row is None:
+            row = LessonProgress(user_id=user_id, lesson_id=item.lesson_id)
+            db.add(row)
+            existing[item.lesson_id] = row
+            created += 1
+        else:
+            updated += 1
+        _apply_progress(row, done=item.done, correct=item.correct,
+                        total=item.total, completed=item.completed)
+
+    db.commit()
+    return {"created": created, "updated": updated, "skipped": skipped}
 
 
 # --- 로컬 데이터 이관 ---

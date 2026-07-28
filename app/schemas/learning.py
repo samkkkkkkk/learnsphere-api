@@ -78,6 +78,43 @@ class ScheduleOut(BaseModel):
         from_attributes = True
 
 
+# --- 레슨 퀴즈 진도 ---
+
+class LessonProgressUpsert(BaseModel):
+    done: int = Field(ge=0)
+    correct: int = Field(ge=0)
+    total: int = Field(ge=0)
+    completed: bool = False
+
+
+class LessonProgressOut(BaseModel):
+    lesson_id: int
+    done: int
+    correct: int
+    total: int
+    completed: bool
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class LessonProgressImportItem(LessonProgressUpsert):
+    lesson_id: int
+
+
+class LessonProgressImportRequest(BaseModel):
+    items: List[LessonProgressImportItem] = Field(
+        default_factory=list, max_length=500)
+
+
+class LessonProgressImportResult(BaseModel):
+    created: int
+    updated: int
+    # 존재하지 않는(또는 보관된) 레슨이라 건너뛴 수
+    skipped: int
+
+
 # --- 로컬 데이터 이관 ---
 
 # 한 번에 받는 항목 수 상한 (goals/schedules 각각)

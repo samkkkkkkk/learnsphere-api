@@ -102,6 +102,30 @@ class LearningSchedule(Base):
     )
 
 
+class LessonProgress(Base):
+    """학습자별 레슨 퀴즈 진도. (user, lesson)당 1행 — upsert로 갱신한다.
+
+    done/correct/total은 자가 채점 결과 요약이고, completed가 목표 진도율
+    (linked_level 합산)의 근거다. '다시 풀기'로 완료가 풀리면 completed_at도
+    비운다.
+    """
+    __tablename__ = 'lesson_progress'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    lesson_id = Column(Integer, ForeignKey('lessons.id'), nullable=False, index=True)
+    done = Column(Integer, nullable=False, default=0)
+    correct = Column(Integer, nullable=False, default=0)
+    total = Column(Integer, nullable=False, default=0)
+    completed = Column(Boolean, nullable=False, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'lesson_id',
+                         name='uq_lesson_progress_user_lesson'),
+    )
+
+
 class Subject(Base):
     __tablename__ = 'subjects'
     subject_id = Column(Integer, primary_key=True, index=True)

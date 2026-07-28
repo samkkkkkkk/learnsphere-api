@@ -12,11 +12,13 @@ from sqlalchemy.orm import Session
 
 from ..core.auth import get_current_user
 from ..core.database import get_db
-from ..crud import crud_learning
+from ..crud import crud_learning, crud_lessons
 from ..models.models import LearningGoal, LearningSchedule, User
 from ..schemas.learning import (
     GoalCreate, GoalOut, GoalProgressDetail, GoalUpdate, ImportRequest,
-    ImportResult, ScheduleCreate, ScheduleOut, ScheduleUpdate,
+    ImportResult, LessonProgressImportRequest, LessonProgressImportResult,
+    LessonProgressOut, LessonProgressUpsert, ScheduleCreate, ScheduleOut,
+    ScheduleUpdate,
 )
 
 router = APIRouter(prefix="/learning", tags=["Learning"])
@@ -129,6 +131,40 @@ def update_schedule(schedule_id: int, request: ScheduleUpdate,
 def delete_schedule(schedule_id: int, db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)):
     crud_learning.delete_schedule(db, _require_schedule(db, schedule_id, user))
+
+
+# --- 레슨 퀴즈 진도 ---
+
+@router.put("/lesson-progress/{lesson_id}", response_model=LessonProgressOut)
+def upsert_lesson_progress(lesson_id: int, request: LessonProgressUpsert,
+                           db: Session = Depends(get_db),
+                           user: User = Depends(get_current_user)):
+    """퀴즈 진도를 저장한다 — (user, lesson)당 1행 upsert."""
+    if crud_lessons.get_lesson_detail(db, lesson_id) is None:
+        raise HTTPException(
+            status_code=404, detail=f"레슨을 찾을 수 없습니다: {lesson_id}")
+    return crud_learning.upsert_lesson_progress(
+        db, user.id, lesson_id, done=request.done, correct=request.correct,
+        total=request.total, completed=request.completed)
+
+
+@router.get("/lesson-progress", response_model=List[LessonProgressOut])
+def list_lesson_progress(db: Session = Depends(get_db),
+                         user: User = Depends(get_current_user)):
+    return crud_learning.list_lesson_progress(db, user.id)
+
+
+@router.post("/lesson-progress/import",
+             response_model=LessonProgressImportResult)
+def import_lesson_progress(request: LessonProgressImportRequest,
+                           db: Session = Depends(get_db),
+                           user: User = Depends(get_current_user)):
+    """localStorage의 퀴즈 기록을 한 번에 이관한다. 없는 레슨은 건너뛴다."""
+    index = crud_lessons.get_lesson_index(db)
+    valid_ids = {lesson["id"] for lessons in index.values()
+                 for lesson in lessons}
+    return crud_learning.import_lesson_progress(
+        db, user.id, request.items, valid_ids)
 
 
 # --- 로컬 데이터 이관 ---
