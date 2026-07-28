@@ -9,6 +9,11 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+# 'date: Optional[date] = None' 꼴은 함정이다 — 클래스 본문에서 date=None 할당이
+# 어노테이션 평가보다 먼저 일어나 Optional[None]이 되어 버린다. 필드명이 date인
+# 곳에서는 이 별칭을 쓴다.
+DateType = date
+
 # 목표 카테고리 (프론트 CATEGORY_MAP과 일치)
 GOAL_CATEGORIES = ("programming", "design", "language", "business", "other")
 # 목표에 연결할 수 있는 레슨 레벨
@@ -57,7 +62,7 @@ class ScheduleCreate(BaseModel):
 
 class ScheduleUpdate(BaseModel):
     """PATCH 부분 수정 — completed 전환 시 completed_at을 서버가 관리한다."""
-    date: Optional[date] = None
+    date: Optional[DateType] = None
     time: Optional[str] = Field(default=None, pattern=r"^\d{2}:\d{2}$")
     content: Optional[str] = Field(default=None, min_length=1, max_length=255)
     duration_minutes: Optional[int] = Field(default=None, ge=15, le=300)

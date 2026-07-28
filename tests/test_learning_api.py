@@ -163,6 +163,30 @@ def test_schedule_complete_toggle_sets_completed_at(client, auth_headers,
     assert stored.completed_at is None
 
 
+def test_schedule_update_all_fields(client, auth_headers):
+    """프론트 수정 모달이 보내는 payload 그대로 PATCH — 날짜 포함 전체 필드.
+
+    회귀 방지: ScheduleUpdate의 date 필드가 Optional[None]으로 잘못 해석되어
+    날짜 수정이 422로 거부되던 버그.
+    """
+    goal = _create_goal(client, auth_headers)
+    schedule = _create_schedule(client, auth_headers, goal["id"])
+
+    response = client.patch(f"/api/v1/learning/schedules/{schedule['id']}", json={
+        "goal_id": goal["id"],  # 프론트가 함께 보내는 잉여 필드 (무시되어야 함)
+        "date": "2026-08-15",
+        "time": "14:30",
+        "content": "수정된 일정",
+        "duration_minutes": 90,
+    }, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    updated = response.json()
+    assert updated["date"] == "2026-08-15"
+    assert updated["time"] == "14:30"
+    assert updated["content"] == "수정된 일정"
+    assert updated["duration_minutes"] == 90
+
+
 def test_goal_delete_cascades_schedules(client, auth_headers, db_session):
     from app.models.models import LearningSchedule
 
