@@ -14,7 +14,8 @@ from app.services import embedding_service  # noqa: E402 — load_dotenv 이후�
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 # 파이프라인(app/services/qdrant_service.py)이 읽는 컬렉션과 동일해야 합니다.
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-complete")
+# 기본값은 OpenAI 임베딩(1536차원) 신규 컬렉션 (구 react-docs-complete와 호환 불가).
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-openai")
 
 # 청크 하나의 최대 토큰.
 # OpenAI 임베딩 한도(8192)보다 훨씬 작게 잡는다 — 검색은 top-4를 프롬프트에 싣기

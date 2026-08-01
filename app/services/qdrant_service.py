@@ -12,7 +12,9 @@ from . import embedding_service
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 # 인덱싱 스크립트(index_data.py)와 동일한 환경 변수를 공유합니다.
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-complete")
+# 기본값은 OpenAI 임베딩(1536차원)으로 재인덱싱한 신규 컬렉션. 구 컬렉션
+# react-docs-complete(sentence-transformers 384차원)는 호환되지 않는다.
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "react-docs-openai")
 
 # --- Qdrant 클라이언트 초기화 ---
 qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
