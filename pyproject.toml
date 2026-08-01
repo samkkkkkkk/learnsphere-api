@@ -1,0 +1,34 @@
+[project]
+name = "learnsphere-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.18.5",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.116.1",
+    "langchain-openai>=1.4.1",
+    "langgraph>=1.2.9",
+    "openai>=1.95.1",
+    "psycopg2-binary>=2.9.10",
+    "pydantic>=2.11.7",
+    "pyjwt>=2.13.0",
+    "python-dotenv>=1.1.1",
+    "qdrant-client>=1.14.3",
+    "sentence-transformers>=5.0.0",
+    "sqlalchemy>=2.0.41",
+    "tiktoken>=0.13.0",
+    "uvicorn[standard]>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+    "slow: 임베딩 모델 로드 등 느린 테스트 (in-memory Qdrant 관련성 검증)",
+]

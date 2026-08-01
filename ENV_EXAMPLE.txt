@@ -1,0 +1,34 @@
+# Database
+# 애플리케이션이 접속하는 PostgreSQL 주소. 아래 POSTGRES_* 값과 일치해야 합니다.
+DATABASE_URL=postgresql://user:password@localhost:5432/learnsphere_db
+
+# --- Docker Compose용 PostgreSQL 설정 (docker-compose.yml이 참조) ---
+# 값을 바꾸면 위 DATABASE_URL도 같이 맞춰주세요. (미지정 시 아래 기본값 사용)
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+POSTGRES_DB=learnsphere_db
+POSTGRES_PORT=5432
+
+# Qdrant (Vector DB)
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your-qdrant-api-key
+# 인덱싱 스크립트와 파이프라인이 공유하는 컬렉션 이름
+# OpenAI 임베딩으로 재인덱싱한 신규 컬렉션을 가리킨다.
+# (구 컬렉션 react-docs-complete는 sentence-transformers 384차원이라 호환되지 않음)
+QDRANT_COLLECTION=react-docs-openai
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+# 튜터 챗이 사용하는 모델 (기본값: gpt-4o-mini)
+CHAT_MODEL=gpt-4o-mini
+# 인덱싱/검색이 공유하는 임베딩 모델 (기본값: text-embedding-3-small, 1536차원)
+EMBEDDING_MODEL=text-embedding-3-small
+
+# Admin API 인증 키 (관리자 엔드포인트/웹훅 호출 시 X-Admin-API-Key 헤더로 전달)
+ADMIN_API_KEY=your-admin-api-key
+
+# 학습자 로그인용 JWT 서명 키. HS256이므로 32바이트 이상을 쓰세요.
+# 예: python -c "import secrets; print(secrets.token_urlsafe(32))"
+JWT_SECRET_KEY=your-jwt-secret-key-at-least-32-bytes
+# 토큰 유효 기간(분). 기본 10080 = 7일
+JWT_EXPIRE_MINUTES=10080

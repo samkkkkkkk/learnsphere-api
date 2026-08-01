@@ -1,0 +1,222 @@
+# backend/app/models/models.py
+from sqlalchemy import (
+    Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, JSON, String,
+    Text, UniqueConstraint, text,
+)
+from sqlalchemy.orm import relationship
+from ..core.database import Base # database.py에서 Base를 가져옴
+from datetime import datetime
+
+class User(Base):
+    """학습자 계정.
+
+    관리자는 여전히 X-Admin-API-Key 체계를 쓰므로 role 컬럼을 두지 않는다.
+    (학습자 인증과 관리자 인증은 별개 경로다.)
+    """
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    nickname = Column(String(50), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+
+class ChatSession(Base):
+    """튜터와의 대화 한 묶음.
+
+    lesson_id가 있으면 레슨 사이드패널에서 시작된 대화다.
+    """
+    __tablename__ = 'chat_sessions'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(255), nullable=True)
+    lesson_id = Column(Integer, ForeignKey('lessons.id'), nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    messages = relationship(
+        "ChatMessage", back_populates="session",
+        cascade="all, delete-orphan", order_by="ChatMessage.id")
+
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey('chat_sessions.id'),
+                        nullable=False, index=True)
+    role = Column(String(20), nullable=False)  # 'user' | 'assistant'
+    content = Column(Text, nullable=False)
+    # 답변 근거 문서 제목 (assistant 메시지에만)
+    sources = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    session = relationship("ChatSession", back_populates="messages")
+
+
+class LearningGoal(Base):
+    """학습자가 세운 학습 목표.
+
+    진도율은 저장하지 않는다 — 완료 일정/레슨 비율로 조회 시 계산한다.
+    linked_level이 있으면 해당 레벨 레슨 완료가 진도에 합산된다.
+    """
+    __tablename__ = 'learning_goals'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    category = Column(String(20), nullable=False)  # programming/design/language/business/other
+    description = Column(Text, nullable=True)
+    deadline = Column(Date, nullable=False)
+    daily_study_time = Column(Integer, nullable=False)  # 분 단위
+    linked_level = Column(String(20), nullable=True)    # 초급/중급/고급
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    schedules = relationship(
+        "LearningSchedule", back_populates="goal",
+        cascade="all, delete-orphan", order_by="LearningSchedule.id")
+
+
+class LearningSchedule(Base):
+    """목표에 묶인 학습 일정 하나.
+
+    user_id를 중복 보관해 goal join 없이 소유권을 검사한다.
+    completed_at은 streak(연속 학습일) 계산의 근거다.
+    """
+    __tablename__ = 'learning_schedules'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    goal_id = Column(Integer, ForeignKey('learning_goals.id'),
+                     nullable=False, index=True)
+    date = Column(Date, nullable=False)
+    time = Column(String(5), nullable=False)  # "HH:MM"
+    content = Column(String(255), nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    completed = Column(Boolean, nullable=False, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    goal = relationship("LearningGoal", back_populates="schedules")
+    __table_args__ = (
+        # 주간/월간 범위 조회용 복합 인덱스
+        Index('ix_learning_schedules_user_date', 'user_id', 'date'),
+    )
+
+
+class LessonProgress(Base):
+    """학습자별 레슨 퀴즈 진도. (user, lesson)당 1행 — upsert로 갱신한다.
+
+    done/correct/total은 자가 채점 결과 요약이고, completed가 목표 진도율
+    (linked_level 합산)의 근거다. '다시 풀기'로 완료가 풀리면 completed_at도
+    비운다.
+    """
+    __tablename__ = 'lesson_progress'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    lesson_id = Column(Integer, ForeignKey('lessons.id'), nullable=False, index=True)
+    done = Column(Integer, nullable=False, default=0)
+    correct = Column(Integer, nullable=False, default=0)
+    total = Column(Integer, nullable=False, default=0)
+    completed = Column(Boolean, nullable=False, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'lesson_id',
+                         name='uq_lesson_progress_user_lesson'),
+    )
+
+
+class Subject(Base):
+    __tablename__ = 'subjects'
+    subject_id = Column(Integer, primary_key=True, index=True)
+    subject_name = Column(String, unique=True, nullable=False)
+    description = Column(Text)
+    contents = relationship("LearningContent", back_populates="subject")
+
+class LearningContent(Base):
+    __tablename__ = 'learning_content'
+    content_id = Column(Integer, primary_key=True, index=True)
+    subject_id = Column(Integer, ForeignKey('subjects.subject_id'), nullable=False)
+    title = Column(String, nullable=False)
+    main_category = Column(String)
+    sub_category = Column(String)
+    topic_group = Column(String, nullable=True)
+    source_path = Column(String, unique=True)
+    subject = relationship("Subject", back_populates="contents")
+
+class LessonBackup(Base):
+    """[DEPRECATED] 파일 기반 백업 시절의 이력 로그.
+
+    레슨 저장소가 DB(lesson_versions)로 이관되면서 신규 기록은 중단됐다.
+    과거 파일 아카이브(generated_content/backup/)와 짝을 이루는 읽기 전용 유산으로,
+    테이블 drop은 추후 별도 결정한다.
+    """
+    __tablename__ = 'lesson_backups'
+    id = Column(Integer, primary_key=True, index=True)
+    lesson_filename = Column(String(255), nullable=False)
+    backup_filename = Column(String(255), nullable=False)
+    # 파이프라인/백업 폴더명이 로컬 시간을 사용하므로 기본값도 로컬 시간으로 통일
+    created_at = Column(DateTime, default=datetime.now)
+    created_by = Column(String(100))
+    prompt = Column(Text)
+    params = Column(JSON)
+    action = Column(String(50))  # 'create', 'restore', 'delete' 등
+
+
+class LessonGeneration(Base):
+    """레슨 생성 배치(세대). 파이프라인 1회 실행 또는 일회성 import가 한 세대다."""
+    __tablename__ = 'lesson_generations'
+    id = Column(Integer, primary_key=True, index=True)
+    source = Column(String(20), nullable=False)   # 'pipeline' | 'import'
+    status = Column(String(20), nullable=False, default='running')  # 'running' | 'completed' | 'failed'
+    created_by = Column(String(100))
+    prompt = Column(Text)
+    params = Column(JSON)
+    started_at = Column(DateTime, default=datetime.now)
+    completed_at = Column(DateTime)
+    total_topics = Column(Integer)
+    succeeded = Column(Integer)
+    failed_topics = Column(JSON)  # [{"level":..., "topic":..., "error":...}]
+    versions = relationship("LessonVersion", back_populates="generation")
+
+
+class Lesson(Base):
+    """레슨의 안정적 정체성. 본문은 lesson_versions에만 있다.
+
+    표시 순번(position)은 세대마다 바뀔 수 있어 키가 아니며,
+    (level, slug)가 재생성 간에 같은 레슨을 잇는 유일 키다.
+    """
+    __tablename__ = 'lessons'
+    id = Column(Integer, primary_key=True, index=True)
+    level = Column(String(20), nullable=False)    # 초급/중급/고급
+    slug = Column(String(255), nullable=False)
+    topic = Column(String(255))                   # Qdrant 원본 토픽명
+    archived_at = Column(DateTime, nullable=True) # 새 세대에 없는 토픽 → 숨김(삭제 아님)
+    created_at = Column(DateTime, default=datetime.now)
+    versions = relationship("LessonVersion", back_populates="lesson")
+    __table_args__ = (
+        UniqueConstraint('level', 'slug', name='uq_lessons_level_slug'),
+    )
+
+
+class LessonVersion(Base):
+    """불변 레슨 본문. 복원은 덮어쓰기가 아니라 is_current 이동이다."""
+    __tablename__ = 'lesson_versions'
+    id = Column(Integer, primary_key=True, index=True)
+    lesson_id = Column(Integer, ForeignKey('lessons.id'), nullable=False, index=True)
+    generation_id = Column(Integer, ForeignKey('lesson_generations.id'), nullable=False)
+    title = Column(String, nullable=False)
+    position = Column(Integer)                    # 세대 내 레벨별 순번 (프론트 number)
+    core_concepts = Column(Text, nullable=False)
+    code_examples = Column(JSON, nullable=False)
+    quizzes = Column(JSON, nullable=False)
+    is_current = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.now)
+    lesson = relationship("Lesson", back_populates="versions")
+    generation = relationship("LessonGeneration", back_populates="versions")
+    __table_args__ = (
+        UniqueConstraint('lesson_id', 'generation_id', name='uq_lesson_versions_lesson_generation'),
+        # 레슨당 활성 버전은 DB 레벨에서 최대 1개 (PostgreSQL/SQLite 공용 partial unique index)
+        Index('uq_lesson_versions_current', 'lesson_id', unique=True,
+              postgresql_where=text('is_current'), sqlite_where=text('is_current')),
+    )
