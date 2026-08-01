@@ -16,6 +16,8 @@ QDRANT_API_KEY=your-qdrant-api-key
 # OpenAI 임베딩으로 재인덱싱한 신규 컬렉션을 가리킨다.
 # (구 컬렉션 react-docs-complete는 sentence-transformers 384차원이라 호환되지 않음)
 QDRANT_COLLECTION=react-docs-openai
+# 관리자가 업로드한 문서(pdf/md/txt)가 저장되는 전용 컬렉션 (React 문서와 분리)
+QDRANT_DOCS_COLLECTION=uploaded-docs
 
 # OpenAI
 OPENAI_API_KEY=your-openai-api-key

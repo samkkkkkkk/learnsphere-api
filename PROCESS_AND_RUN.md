@@ -42,6 +42,29 @@ uv run uvicorn app.main:app --reload
 ```
 - 서버가 실행되면: http://127.0.0.1:8000/docs 에서 API 문서를 확인할 수 있습니다.
 
-## 4. 기타
+## 4. 문서 업로드 RAG 인덱싱 (관리자용)
+
+pdf/md/txt 문서를 업로드하면 백그라운드에서 청킹 → 임베딩 → Qdrant 인덱싱됩니다.
+업로드 문서는 전용 컬렉션(`QDRANT_DOCS_COLLECTION`, 기본 `uploaded-docs`)에 저장되어
+기존 React 문서 검색·레슨 생성에는 영향을 주지 않습니다.
+
+모든 엔드포인트는 `X-Admin-API-Key` 헤더가 필요합니다.
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/api/v1/admin/documents` | 파일 업로드(multipart `file`) → 202 + document_id. 같은 파일명은 409 |
+| GET | `/api/v1/admin/documents` | 업로드 문서 목록 |
+| GET | `/api/v1/admin/documents/{id}` | 상태 조회 (pending → processing → completed/failed) |
+| DELETE | `/api/v1/admin/documents/{id}` | 문서 삭제 (Qdrant 포인트 + DB 행). 삭제 후 같은 파일명 재업로드 가능 |
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/admin/documents \
+  -H "X-Admin-API-Key: $ADMIN_API_KEY" -F "file=@guide.md"
+```
+
+알려진 한계: 서버 재시작 시 pending/processing에 멈춘 문서는 자동 복구되지 않습니다 —
+삭제 후 재업로드하세요. 파일 크기 상한은 20MB입니다.
+
+## 5. 기타
 - Qdrant, OpenAI 등 외부 서비스가 정상적으로 동작해야 전체 기능이 작동합니다.
 - 추가 데이터 인덱싱, 백업, 마이그레이션 등은 `app/scripts/` 폴더의 스크립트를 참고하세요. 
